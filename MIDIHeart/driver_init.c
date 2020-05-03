@@ -19,6 +19,8 @@ struct timer_descriptor TIMER_0;
 
 struct usart_sync_descriptor TARGET_IO;
 
+struct spi_s_sync_descriptor SPI_0;
+
 struct usb_h_desc USB_0_inst;
 
 void TARGET_IO_PORT_init(void)
@@ -40,6 +42,73 @@ void TARGET_IO_init(void)
 	TARGET_IO_CLOCK_init();
 	usart_sync_init(&TARGET_IO, SERCOM0, (void *)NULL);
 	TARGET_IO_PORT_init();
+}
+
+void SPI_0_PORT_init(void)
+{
+
+	gpio_set_pin_level(PA12,
+	                   // <y> Initial level
+	                   // <id> pad_initial_level
+	                   // <false"> Low
+	                   // <true"> High
+	                   false);
+
+	// Set pin direction to output
+	gpio_set_pin_direction(PA12, GPIO_DIRECTION_OUT);
+
+	gpio_set_pin_function(PA12, PINMUX_PA12D_SERCOM4_PAD0);
+
+	// Set pin direction to input
+	gpio_set_pin_direction(PB09, GPIO_DIRECTION_IN);
+
+	gpio_set_pin_pull_mode(PB09,
+	                       // <y> Pull configuration
+	                       // <id> pad_pull_config
+	                       // <GPIO_PULL_OFF"> Off
+	                       // <GPIO_PULL_UP"> Pull-up
+	                       // <GPIO_PULL_DOWN"> Pull-down
+	                       GPIO_PULL_OFF);
+
+	gpio_set_pin_function(PB09, PINMUX_PB09D_SERCOM4_PAD1);
+
+	// Set pin direction to input
+	gpio_set_pin_direction(PB10, GPIO_DIRECTION_IN);
+
+	gpio_set_pin_pull_mode(PB10,
+	                       // <y> Pull configuration
+	                       // <id> pad_pull_config
+	                       // <GPIO_PULL_OFF"> Off
+	                       // <GPIO_PULL_UP"> Pull-up
+	                       // <GPIO_PULL_DOWN"> Pull-down
+	                       GPIO_PULL_OFF);
+
+	gpio_set_pin_function(PB10, PINMUX_PB10D_SERCOM4_PAD2);
+
+	gpio_set_pin_level(PB11,
+	                   // <y> Initial level
+	                   // <id> pad_initial_level
+	                   // <false"> Low
+	                   // <true"> High
+	                   false);
+
+	// Set pin direction to output
+	gpio_set_pin_direction(PB11, GPIO_DIRECTION_OUT);
+
+	gpio_set_pin_function(PB11, PINMUX_PB11D_SERCOM4_PAD3);
+}
+
+void SPI_0_CLOCK_init(void)
+{
+	_pm_enable_bus_clock(PM_BUS_APBC, SERCOM4);
+	_gclk_enable_channel(SERCOM4_GCLK_ID_CORE, CONF_GCLK_SERCOM4_CORE_SRC);
+}
+
+void SPI_0_init(void)
+{
+	SPI_0_CLOCK_init();
+	spi_s_sync_init(&SPI_0, SERCOM4);
+	SPI_0_PORT_init();
 }
 
 void delay_driver_init(void)
@@ -189,6 +258,8 @@ void system_init(void)
 	gpio_set_pin_function(LED, GPIO_PIN_FUNCTION_OFF);
 
 	TARGET_IO_init();
+
+	SPI_0_init();
 
 	delay_driver_init();
 

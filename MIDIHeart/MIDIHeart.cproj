@@ -56,6 +56,7 @@
           <AcmeProjectActionInfo Action="File" Source="hal/include/hal_init.h" IsConfig="false" Hash="OrYSVpF3YA5XrOBImWpdSg" />
           <AcmeProjectActionInfo Action="File" Source="hal/include/hal_io.h" IsConfig="false" Hash="XZRSabc39WU/0MFBLYGLvQ" />
           <AcmeProjectActionInfo Action="File" Source="hal/include/hal_sleep.h" IsConfig="false" Hash="KuZDwgrLdU+fuMG82ZFTqg" />
+          <AcmeProjectActionInfo Action="File" Source="hal/include/hal_spi_s_sync.h" IsConfig="false" Hash="BcDifFYXDI6EDQ8wmawMBw" />
           <AcmeProjectActionInfo Action="File" Source="hal/include/hal_usb_host.h" IsConfig="false" Hash="2a4a5m6FCDzIVM7dQeyjWA" />
           <AcmeProjectActionInfo Action="File" Source="hal/include/hpl_core.h" IsConfig="false" Hash="XeEtUlBSwXUmLA41hFYYWg" />
           <AcmeProjectActionInfo Action="File" Source="hal/include/hpl_delay.h" IsConfig="false" Hash="3tgjyGPrs0ePCewpMUQPbQ" />
@@ -123,13 +124,6 @@
           <AcmeProjectActionInfo Action="File" Source="hri/hri_tcc_d21.h" IsConfig="false" Hash="QA192KQHCCZc1sbOL1N+JQ" />
           <AcmeProjectActionInfo Action="File" Source="hri/hri_usb_d21.h" IsConfig="false" Hash="RxhrdW3BEk3zWzOXVeshaQ" />
           <AcmeProjectActionInfo Action="File" Source="hri/hri_wdt_d21.h" IsConfig="false" Hash="ruUMkugqrufLH89qsLNR9Q" />
-          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/gcc/read.c" IsConfig="false" Hash="965gzdOr4sfKJQ4OpEJN/g" />
-          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/gcc/write.c" IsConfig="false" Hash="gCAVrSOZuCMZ84vNa/WFxA" />
-          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/iar/read.c" IsConfig="false" Hash="IpkgLxXTg/nDat19kCJ3gw" />
-          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/iar/write.c" IsConfig="false" Hash="JTD9ZyU1GAbpub8mamr/ZA" />
-          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/keil/Retarget.c" IsConfig="false" Hash="NzdDPGuEvGimitFm3wVXxw" />
-          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/stdio_io.c" IsConfig="false" Hash="Nx8PfIAymK/f5AjLql/CyQ" />
-          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/stdio_io.h" IsConfig="false" Hash="4X02f8UL8cjBHeGJM3BnHw" />
           <AcmeProjectActionInfo Action="File" Source="usb/class/hid/host/hidhf_mouse.c" IsConfig="false" Hash="Hbh583ZIO/0pHZgKKg6/Jg" />
           <AcmeProjectActionInfo Action="File" Source="usb/class/hid/host/hidhf_mouse.h" IsConfig="false" Hash="t4QVuwmV6nOSKiqQj9Cq7g" />
           <AcmeProjectActionInfo Action="File" Source="usb/class/hid/usb_protocol_hid.h" IsConfig="false" Hash="OhMy2WjTnsIdsTGPmKNtTw" />
@@ -143,12 +137,19 @@
           <AcmeProjectActionInfo Action="File" Source="usb/usb_includes.h" IsConfig="false" Hash="Rb0AWqieP1+ot9abbGRC9g" />
           <AcmeProjectActionInfo Action="File" Source="usb/usb_protocol.c" IsConfig="false" Hash="506QsMNqKwMw3St/nEXa8Q" />
           <AcmeProjectActionInfo Action="File" Source="usb/usb_protocol.h" IsConfig="false" Hash="IjsDWsLIdSQj3pFlkAX0UA" />
+          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/gcc/read.c" IsConfig="false" Hash="965gzdOr4sfKJQ4OpEJN/g" />
+          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/gcc/write.c" IsConfig="false" Hash="gCAVrSOZuCMZ84vNa/WFxA" />
+          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/iar/read.c" IsConfig="false" Hash="IpkgLxXTg/nDat19kCJ3gw" />
+          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/iar/write.c" IsConfig="false" Hash="JTD9ZyU1GAbpub8mamr/ZA" />
+          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/keil/Retarget.c" IsConfig="false" Hash="NzdDPGuEvGimitFm3wVXxw" />
+          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/stdio_io.c" IsConfig="false" Hash="Nx8PfIAymK/f5AjLql/CyQ" />
+          <AcmeProjectActionInfo Action="File" Source="stdio_redirect/stdio_io.h" IsConfig="false" Hash="4X02f8UL8cjBHeGJM3BnHw" />
           <AcmeProjectActionInfo Action="File" Source="main.c" IsConfig="false" Hash="k0AH7j+BrmdFhBPzCCMptA" />
-          <AcmeProjectActionInfo Action="File" Source="driver_init.c" IsConfig="false" Hash="GX3LZiafr0k8EyUVDWK75Q" />
-          <AcmeProjectActionInfo Action="File" Source="driver_init.h" IsConfig="false" Hash="SDVDmLGRlQt57VUQDFvwVA" />
-          <AcmeProjectActionInfo Action="File" Source="atmel_start_pins.h" IsConfig="false" Hash="YlejPqoaqjW+u74c7QQX1Q" />
+          <AcmeProjectActionInfo Action="File" Source="driver_init.c" IsConfig="false" Hash="jBkIesWXFrNJFHXcH9YEeA" />
+          <AcmeProjectActionInfo Action="File" Source="driver_init.h" IsConfig="false" Hash="MlxZKdv2p22Ve398z3mPfw" />
+          <AcmeProjectActionInfo Action="File" Source="atmel_start_pins.h" IsConfig="false" Hash="L5J435OH4Gr6YkX7/67VvQ" />
           <AcmeProjectActionInfo Action="File" Source="examples/driver_examples.h" IsConfig="false" Hash="8vHWZmeHb6ejy6AgzjFckA" />
-          <AcmeProjectActionInfo Action="File" Source="examples/driver_examples.c" IsConfig="false" Hash="Uv/7wYEp39K8wi2MZ+oy8w" />
+          <AcmeProjectActionInfo Action="File" Source="examples/driver_examples.c" IsConfig="false" Hash="pLA+TLdYCbdf2gfbMpheQQ" />
           <AcmeProjectActionInfo Action="File" Source="hal/include/hal_timer.h" IsConfig="false" Hash="5pZVthtMl40VMvofOld2ng" />
           <AcmeProjectActionInfo Action="File" Source="hal/include/hal_usart_sync.h" IsConfig="false" Hash="ZzIGSRyjZuxRzFAtNNt7sw" />
           <AcmeProjectActionInfo Action="File" Source="hal/include/hpl_calendar.h" IsConfig="false" Hash="58uU8QaNqMOXYXdVNCAzAw" />
@@ -162,6 +163,7 @@
           <AcmeProjectActionInfo Action="File" Source="hal/include/hpl_timer.h" IsConfig="false" Hash="s/0PW0pyF4MQIYZJ6S0wyA" />
           <AcmeProjectActionInfo Action="File" Source="hal/include/hpl_usart_async.h" IsConfig="false" Hash="tBfmk3BN3Q1WbYVoWDbsJw" />
           <AcmeProjectActionInfo Action="File" Source="hal/include/hpl_usart_sync.h" IsConfig="false" Hash="Yj+PoPxG2CqDOy5XoIWkwg" />
+          <AcmeProjectActionInfo Action="File" Source="hal/src/hal_spi_s_sync.c" IsConfig="false" Hash="ieqBjH0Vtuy9FaOaSw71oQ" />
           <AcmeProjectActionInfo Action="File" Source="hal/src/hal_timer.c" IsConfig="false" Hash="F2MrEXhHq4umI9xpONnlGg" />
           <AcmeProjectActionInfo Action="File" Source="hal/src/hal_usart_sync.c" IsConfig="false" Hash="VBVlAmBFEYTTUMHeIRFSxg" />
           <AcmeProjectActionInfo Action="File" Source="hal/utils/include/parts.h" IsConfig="false" Hash="Mpqha0i6iKRli0QX8WeoBw" />
@@ -180,23 +182,23 @@
           <AcmeProjectActionInfo Action="File" Source="hpl/sysctrl/hpl_sysctrl.c" IsConfig="false" Hash="d4wIg1swqGafMtp4ATkI2w" />
           <AcmeProjectActionInfo Action="File" Source="hpl/systick/hpl_systick.c" IsConfig="false" Hash="YYWQVH26EDBDzYTUwepAcA" />
           <AcmeProjectActionInfo Action="File" Source="hpl/usb/hpl_usb.c" IsConfig="false" Hash="fR/y7jDSz/QBGLaFcd1+9g" />
-          <AcmeProjectActionInfo Action="File" Source="stdio_start.c" IsConfig="false" Hash="WtwT7ld+0j4cPDj52v3y1A" />
-          <AcmeProjectActionInfo Action="File" Source="stdio_start.h" IsConfig="false" Hash="5j2k69zdoQpbzluEyr/rHQ" />
           <AcmeProjectActionInfo Action="File" Source="usb_start.c" IsConfig="false" Hash="/9n/g8kD//IM6guqP1yHVg" />
           <AcmeProjectActionInfo Action="File" Source="usb_start.h" IsConfig="false" Hash="SWiYo5katcYaKNXsfYCu8g" />
+          <AcmeProjectActionInfo Action="File" Source="stdio_start.c" IsConfig="false" Hash="WtwT7ld+0j4cPDj52v3y1A" />
+          <AcmeProjectActionInfo Action="File" Source="stdio_start.h" IsConfig="false" Hash="5j2k69zdoQpbzluEyr/rHQ" />
           <AcmeProjectActionInfo Action="File" Source="atmel_start.h" IsConfig="false" Hash="SMAmPkJoghsCDgpKCmCl/Q" />
           <AcmeProjectActionInfo Action="File" Source="atmel_start.c" IsConfig="false" Hash="yy7cZ44eCOz+i825Rr7jgw" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_dmac_config.h" IsConfig="true" Hash="epQJaS6fYVwOO2L9+1CkQg" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_gclk_config.h" IsConfig="true" Hash="xfcF0sMWlz7TunYXd63TGw" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_pm_config.h" IsConfig="true" Hash="x4vaJkd/zdQh7JrOUaIkRw" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_rtc_config.h" IsConfig="true" Hash="cj99f88YMO2RoIxwdfMf9g" />
-          <AcmeProjectActionInfo Action="File" Source="config/hpl_sercom_config.h" IsConfig="true" Hash="b+PjbibOk5knY0irf5P6Zg" />
+          <AcmeProjectActionInfo Action="File" Source="config/hpl_sercom_config.h" IsConfig="true" Hash="mbMr/ihQC1VjiTwCseRnfA" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_sysctrl_config.h" IsConfig="true" Hash="mBVzt0SZbKGVaT8olYKm9g" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_systick_config.h" IsConfig="true" Hash="tlT3lNDKWFe82MiGWfQzcA" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_usb_config.h" IsConfig="true" Hash="CKkhnYXmYrrGb2u9dKLggw" />
-          <AcmeProjectActionInfo Action="File" Source="config/peripheral_clk_config.h" IsConfig="true" Hash="BIbQ5KrkzIjzv7uroByR8Q" />
-          <AcmeProjectActionInfo Action="File" Source="config/stdio_redirect_config.h" IsConfig="true" Hash="CKmkBk12sfr7mb+HRQBuzg" />
+          <AcmeProjectActionInfo Action="File" Source="config/peripheral_clk_config.h" IsConfig="true" Hash="skKOe8l1nfW3NOyMbGBs/Q" />
           <AcmeProjectActionInfo Action="File" Source="config/usbh_config.h" IsConfig="true" Hash="fot8p0caxPF3KS4ZOJfL8A" />
+          <AcmeProjectActionInfo Action="File" Source="config/stdio_redirect_config.h" IsConfig="true" Hash="CKmkBk12sfr7mb+HRQBuzg" />
         </AcmeActionInfos>
         <NonsecureFilesInfo />
       </AcmeProjectConfig>
@@ -250,12 +252,12 @@
       <Value>../hpl/systick</Value>
       <Value>../hpl/usb</Value>
       <Value>../hri</Value>
-      <Value>../stdio_redirect</Value>
       <Value>../usb</Value>
       <Value>../usb/class/hid</Value>
       <Value>../usb/class/hid/host</Value>
       <Value>../usb/class/hub</Value>
       <Value>../usb/host</Value>
+      <Value>../stdio_redirect</Value>
       <Value>%24(PackRepoDir)\Atmel\SAMD21_DFP\1.3.395\samd21a\include</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
@@ -294,12 +296,12 @@
       <Value>../hpl/systick</Value>
       <Value>../hpl/usb</Value>
       <Value>../hri</Value>
-      <Value>../stdio_redirect</Value>
       <Value>../usb</Value>
       <Value>../usb/class/hid</Value>
       <Value>../usb/class/hid/host</Value>
       <Value>../usb/class/hub</Value>
       <Value>../usb/host</Value>
+      <Value>../stdio_redirect</Value>
       <Value>%24(PackRepoDir)\Atmel\SAMD21_DFP\1.3.395\samd21a\include</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
@@ -322,12 +324,12 @@
       <Value>../hpl/systick</Value>
       <Value>../hpl/usb</Value>
       <Value>../hri</Value>
-      <Value>../stdio_redirect</Value>
       <Value>../usb</Value>
       <Value>../usb/class/hid</Value>
       <Value>../usb/class/hid/host</Value>
       <Value>../usb/class/hub</Value>
       <Value>../usb/host</Value>
+      <Value>../stdio_redirect</Value>
       <Value>%24(PackRepoDir)\Atmel\SAMD21_DFP\1.3.395\samd21a\include</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
@@ -366,12 +368,12 @@
       <Value>../hpl/systick</Value>
       <Value>../hpl/usb</Value>
       <Value>../hri</Value>
-      <Value>../stdio_redirect</Value>
       <Value>../usb</Value>
       <Value>../usb/class/hid</Value>
       <Value>../usb/class/hid/host</Value>
       <Value>../usb/class/hub</Value>
       <Value>../usb/host</Value>
+      <Value>../stdio_redirect</Value>
       <Value>%24(PackRepoDir)\Atmel\SAMD21_DFP\1.3.395\samd21a\include</Value>
     </ListValues>
   </armgcc.compiler.directories.IncludePaths>
@@ -411,12 +413,12 @@
       <Value>../hpl/systick</Value>
       <Value>../hpl/usb</Value>
       <Value>../hri</Value>
-      <Value>../stdio_redirect</Value>
       <Value>../usb</Value>
       <Value>../usb/class/hid</Value>
       <Value>../usb/class/hid/host</Value>
       <Value>../usb/class/hub</Value>
       <Value>../usb/host</Value>
+      <Value>../stdio_redirect</Value>
       <Value>%24(PackRepoDir)\Atmel\SAMD21_DFP\1.3.395\samd21a\include</Value>
     </ListValues>
   </armgcc.assembler.general.IncludePaths>
@@ -440,12 +442,12 @@
       <Value>../hpl/systick</Value>
       <Value>../hpl/usb</Value>
       <Value>../hri</Value>
-      <Value>../stdio_redirect</Value>
       <Value>../usb</Value>
       <Value>../usb/class/hid</Value>
       <Value>../usb/class/hid/host</Value>
       <Value>../usb/class/hub</Value>
       <Value>../usb/host</Value>
+      <Value>../stdio_redirect</Value>
       <Value>%24(PackRepoDir)\Atmel\SAMD21_DFP\1.3.395\samd21a\include</Value>
     </ListValues>
   </armgcc.preprocessingassembler.general.IncludePaths>
@@ -533,6 +535,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="hal\include\hal_sleep.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\include\hal_spi_s_sync.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="hal\include\hal_timer.h">
@@ -650,6 +655,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="hal\src\hal_sleep.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\src\hal_spi_s_sync.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="hal\src\hal_timer.c">
@@ -970,6 +978,9 @@
       <SubType>compile</SubType>
     </None>
     <None Include="documentation\usb_protocol_hub.rst">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="hal\documentation\spi_slave_sync.rst">
       <SubType>compile</SubType>
     </None>
     <None Include="hal\documentation\timer.rst">

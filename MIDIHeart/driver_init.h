@@ -23,12 +23,16 @@ extern "C" {
 
 #include <hal_usart_sync.h>
 
+#include <hal_spi_s_sync.h>
+
 #include <hal_delay.h>
 #include <hal_timer.h>
 
 #include <hal_usb_host.h>
 
 extern struct usart_sync_descriptor TARGET_IO;
+
+extern struct spi_s_sync_descriptor SPI_0;
 
 extern struct timer_descriptor TIMER_0;
 
@@ -37,6 +41,11 @@ extern struct usb_h_desc USB_0_inst;
 void TARGET_IO_PORT_init(void);
 void TARGET_IO_CLOCK_init(void);
 void TARGET_IO_init(void);
+
+void SPI_0_PORT_init(void);
+void SPI_0_CLOCK_init(void);
+void SPI_0_init(void);
+void SPI_0_example(void);
 
 void delay_driver_init(void);
 

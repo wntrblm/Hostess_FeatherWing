@@ -19,14 +19,6 @@ board:
 details: null
 application: null
 middlewares:
-  STDIO_REDIRECT_0:
-    user_label: STDIO_REDIRECT_0
-    configuration: {}
-    definition: Atmel:STDIO_redirect:0.0.1::STDIO_Redirect
-    functionality: STDIO_Redirect
-    api: STDIO:Redirect:IO
-    dependencies:
-      Target IO: TARGET_IO
   USB_CHAPTER_9:
     user_label: USB_CHAPTER_9
     configuration: {}
@@ -70,6 +62,14 @@ middlewares:
     dependencies:
       USB Host Core instance: USB_HOST_CORE_0
       USB Class HID: USB_CLASS_HID
+  STDIO_REDIRECT_0:
+    user_label: STDIO_REDIRECT_0
+    configuration: {}
+    definition: Atmel:STDIO_redirect:0.0.1::STDIO_Redirect
+    functionality: STDIO_Redirect
+    api: STDIO:Redirect:IO
+    dependencies:
+      Target IO: TARGET_IO
 drivers:
   GCLK:
     user_label: GCLK
@@ -203,7 +203,7 @@ drivers:
       usart_arch_sampa: 7-8-9 (3-4-5 8-bit over-sampling)
       usart_arch_sampr: 16x arithmetic
       usart_arch_sfde: false
-      usart_baud_rate: 9600
+      usart_baud_rate: 57600
       usart_character_size: 8 bits
       usart_parity: No parity
       usart_rx_enable: true
@@ -219,6 +219,57 @@ drivers:
       - name: SERCOM0/PAD/3
         pad: PA11
         label: RX
+    clocks:
+      domain_group:
+        nodes:
+        - name: Core
+          input: Generic clock generator 0
+          external: false
+          external_frequency: 0
+        - name: Slow
+          input: Generic clock generator 3
+          external: false
+          external_frequency: 0
+        configuration:
+          core_gclk_selection: Generic clock generator 0
+          slow_gclk_selection: Generic clock generator 3
+  SPI_0:
+    user_label: SPI_0
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::SERCOM4::driver_config_definition::SPI.Slave::HAL:Driver:SPI.Slave.Sync
+    functionality: SPI
+    api: HAL:Driver:SPI_Slave_Sync
+    configuration:
+      spi_slave_advanced: false
+      spi_slave_arch_addr: 0
+      spi_slave_arch_addrmask: 0
+      spi_slave_arch_amode: Address mask
+      spi_slave_arch_amode_en: false
+      spi_slave_arch_cpha: Sample input on trailing edge
+      spi_slave_arch_cpol: SCK is low when idle
+      spi_slave_arch_dbgstop: Keep running
+      spi_slave_arch_dord: MSB first
+      spi_slave_arch_ibon: In data stream
+      spi_slave_arch_ploaden: false
+      spi_slave_arch_runstdby: false
+      spi_slave_arch_ssde: false
+      spi_slave_character_size: 8 bits
+      spi_slave_rx_enable: true
+    optional_signals: []
+    variant:
+      specification: TXPO=3, RXPO=2
+      required_signals:
+      - name: SERCOM4/PAD/0
+        pad: PA12
+        label: MISO
+      - name: SERCOM4/PAD/1
+        pad: PB09
+        label: _SS
+      - name: SERCOM4/PAD/2
+        pad: PB10
+        label: MOSI
+      - name: SERCOM4/PAD/3
+        pad: PB11
+        label: SCK
     clocks:
       domain_group:
         nodes:
@@ -664,6 +715,12 @@ drivers:
         configuration:
           usb_gclk_selection: Generic clock generator 0
 pads:
+  PB09:
+    name: PB09
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PB09
+    mode: Digital input
+    user_label: PB09
+    configuration: null
   PA10:
     name: PA10
     definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PA10
@@ -675,6 +732,24 @@ pads:
     definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PA11
     mode: Peripheral IO
     user_label: PA11
+    configuration: null
+  PB10:
+    name: PB10
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PB10
+    mode: Digital input
+    user_label: PB10
+    configuration: null
+  PB11:
+    name: PB11
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PB11
+    mode: Digital output
+    user_label: PB11
+    configuration: null
+  PA12:
+    name: PA12
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PA12
+    mode: Digital output
+    user_label: PA12
     configuration: null
   LED:
     name: PA17

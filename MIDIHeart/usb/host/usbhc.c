@@ -352,8 +352,7 @@ static void usbhc_enum_reset(struct usbhc_driver *r, struct usbhd_driver *hub, u
  */
 static inline void usbhc_enum_suspend(struct usbhc_driver *r, struct usbhd_driver *hub, uint8_t port)
 {
-	ASSERT(!"Suspend not implemented for Hubs.");
-	//return usbhc_set_port_ftr(r, hub, PORT_SUSPEND, port);
+	return usbhc_set_port_ftr(r, hub, PORT_SUSPEND, port);
 }
 
 /**
@@ -364,8 +363,7 @@ static inline void usbhc_enum_suspend(struct usbhc_driver *r, struct usbhd_drive
  */
 static inline void usbhc_enum_resume(struct usbhc_driver *r, struct usbhd_driver *hub, uint8_t port)
 {
-	ASSERT(!"Resume not implemented for Hubs.");
-	//return usbhc_clr_port_ftr(r, hub, PORT_SUSPEND, port);
+	return usbhc_clr_port_ftr(r, hub, PORT_SUSPEND, port);
 }
 #endif
 
@@ -621,8 +619,7 @@ static void usbhc_disable_dev(struct usbhc_driver *r, struct usbhd_driver *hub, 
 		/* Never disable HC root here */
 		return;
 	}
-	ASSERT(!"Disable not implemented for Hubs");
-	//usbhc_clr_port_ftr(r, hub, PORT_ENABLE, d->hub_port);
+	usbhc_clr_port_ftr(r, hub, PORT_ENABLE, d->hub_port);
 	/* There will be port changes interrupt then */
 }
 #endif
@@ -1116,14 +1113,12 @@ static void usbhc_pipe_0_xfer_done(struct usb_h_pipe *pipe)
 #if CONF_USBH_HUB_SP
 		case USB_REQ_GET_STATUS:
 			if (req->bmRequestType == 0xA3) { /* GetPortStatus */
-				ASSERT(!"Get port status isn't implemented yet for hubs.");
-				//usbhc_get_port_status_end(r, usbhc_find_hub(d));
+				usbhc_get_port_status_end(r, usbhc_find_hub(d));
 			}
 			break;
 		case USB_REQ_CLEAR_FTR:
 			if (req->bmRequestType == 0x23) { /* ClearPortFeature */
-				ASSERT(!"Clear port feature not implemented for Hubs");
-				//usbhc_clr_port_ftr_end(r, usbhc_find_hub(d));
+				usbhc_clr_port_ftr_end(r, usbhc_find_hub(d));
 			}
 			break;
 #endif
