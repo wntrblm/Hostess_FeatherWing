@@ -43,3 +43,9 @@ void wtr_queue_pop(struct wtr_queue *q, uint8_t *i) {
 	q->_count--;
 	_check_offsets(q);
 }
+
+void wtr_queue_empty(struct wtr_queue *q) {
+    q->_write_offset = 0;
+    q->_read_offset = 0;
+    q->_count = 0;
+}

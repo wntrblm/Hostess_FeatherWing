@@ -129,7 +129,8 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 	
 	usb_h_pipe_register_callback(_out_pipe, _handle_pipe_out);
 
-	// TODO: Free pipe 0.
+	// This driver doesn't need pipe 0, so free it.
+	usb_h_pipe_free(pipe_0);
 	
 	printf("Pipes allocated!\r\n");
 	
@@ -145,7 +146,9 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 static int32_t _handle_disconnection(uint8_t port) {
 	printf("MIDI disconnection called.\r\n");
 
-	// TODO: check port!
+	// TODO: Check the port and make sure its this device.
+	// requires the usb host driver to track address -> port
+	// relationships.
 
 	if(_in_pipe != NULL) {
 		usb_h_pipe_free(_in_pipe);
@@ -157,7 +160,7 @@ static int32_t _handle_disconnection(uint8_t port) {
 		_out_pipe = NULL;
 	}
 
-	// TODO: Reset the queues.
+	wtr_queue_empty(&_in_queue);
 
 	return ERR_NONE;
 }

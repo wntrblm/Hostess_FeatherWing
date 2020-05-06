@@ -22,6 +22,7 @@ struct wtr_queue {
 void wtr_queue_init(struct wtr_queue *q);
 void wtr_queue_push(struct wtr_queue *q, uint8_t *i);
 void wtr_queue_pop(struct wtr_queue *q, uint8_t *i);
+void wtr_queue_empty(struct wtr_queue *q);
 
 inline bool wtr_queue_is_empty(struct wtr_queue *q) {
     return q->_count == 0;
