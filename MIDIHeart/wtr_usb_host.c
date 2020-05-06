@@ -127,7 +127,6 @@ void wtr_usb_host_register_driver(struct wtr_usb_host_driver driver) {
     enumeration process.
 */
 static void _handle_enumeration_event(enum EnumerationEvent event){
-    // TODO: Error handling... throughout. Maybe a macro can help.
     switch(event) {
         // Device newly connected, reset its port.
         case ENUM_E_CONNECTED:
@@ -248,8 +247,12 @@ static int32_t _handle_device_descriptor() {
 	if (_pipe_0->x.ctrl.count < sizeof(usb_dev_desc_t)) {
 		// Update max packet size and re-request the descriptor.
 		// Max packet size is byte 7 in the device descriptor.
-		// TODO: Make sure this is less than our max resp size.
 		uint8_t bMaxPackSize0 = rep_buf[7];
+
+        if(bMaxPackSize0 > WTR_USB_REPLY_BUFFER_LEN) {
+            return ERR_OVERFLOW;
+        }
+
 		request_status = usb_h_pipe_set_control_param(
 			_pipe_0, _pipe_0->dev, _pipe_0->ep, bMaxPackSize0, _pipe_0->speed);
 			
@@ -297,8 +300,11 @@ static int32_t _handle_config_descriptor() {
 	// We got the descriptor header, but need to request the full descriptor.
 	if(_pipe_0->x.ctrl.count == sizeof(struct usb_config_desc)) {
 		uint16_t descriptor_length = conf_desc->wTotalLength;
+
+        if(descriptor_length > WTR_USB_REPLY_BUFFER_LEN) {
+            return ERR_OVERFLOW;
+        }
 		
-		// TODO: Make sure the descriptor length isn't longer than our reply buffer.
 		printf("Requesting full config descriptor.\r\n");
 		
 		return wtr_usb_send_get_conf_desc_request(_pipe_0, 0, req_buf, rep_buf, descriptor_length);
