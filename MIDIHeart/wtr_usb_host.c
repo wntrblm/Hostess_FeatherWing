@@ -40,6 +40,8 @@
 #define EP0_SIZE_DEFAULT 64
 /** Length of the reply buffer for control endpoint requests */
 #define WTR_USB_REPLY_BUFFER_LEN 255
+/** Max number of drivers */
+#define WTR_USB_MAX_HOST_DRIVERS 10
 
 
 enum EnumerationState {
@@ -86,9 +88,8 @@ struct EnumerationData {
 } _enum_data;
 uint8_t req_buf[64];
 uint8_t rep_buf[WTR_USB_REPLY_BUFFER_LEN];
-
-//TODO: make this an array so multiple callbacks can be registered.
-wtr_usb_enumeration_callback _enumeration_callback;
+struct wtr_usb_host_driver _host_drivers[WTR_USB_MAX_HOST_DRIVERS];
+size_t _host_driver_count = 0;
 
 /* Private function forward declarations. */
 
@@ -110,9 +111,10 @@ void wtr_usb_host_init(struct usb_h_desc *drv) {
     _drv = drv;
 }
 
-
-void wtr_usb_host_register_enumeration_callback(wtr_usb_enumeration_callback cb) {
-	_enumeration_callback = cb;
+void wtr_usb_host_register_driver(struct wtr_usb_host_driver driver) {
+    ASSERT(_host_driver_count != WTR_USB_MAX_HOST_DRIVERS);
+    _host_drivers[_host_driver_count] = driver;
+    _host_driver_count++;
 }
 
 
@@ -179,10 +181,14 @@ static void _handle_enumeration_event(enum EnumerationEvent event){
         
         case ENUM_E_CONFIG_SET:
 			printf("Enumeration successful.\r\n");
-			if(_enumeration_callback != NULL) {
-				// TODO: Check return value, cleanup resources if needed.
-				_enumeration_callback(_pipe_0, USB_STRUCT_PTR(usb_config_desc, &_enum_data.conf_desc));
-			}
+            for(size_t i = 0; i < WTR_USB_MAX_HOST_DRIVERS; i++) {
+                struct wtr_usb_host_driver *driver = &_host_drivers[i];
+                if (driver->enumeration_callback == NULL) break;
+                
+				// TODO: Check return value, cleanup resources if needed, return if the driver handled it?
+                // TODO: The driver should now own endpoint 0, so let go of our ptr to it.
+                driver->enumeration_callback(_pipe_0, USB_STRUCT_PTR(usb_config_desc, &_enum_data.conf_desc));
+            }
 			_enum_data.state = ENUM_S_READY;
             break;
 
@@ -190,7 +196,11 @@ static void _handle_enumeration_event(enum EnumerationEvent event){
         case ENUM_E_DISCONNECTED:
 			printf("Port %u disconnection.\r\n", _enum_data.port);
 			_enum_data.state = ENUM_S_UNATTACHED;
-			// TODO: Notify device driver for teardown.
+            for(size_t i = 0; i < WTR_USB_MAX_HOST_DRIVERS; i++) {
+                struct wtr_usb_host_driver *driver = &_host_drivers[i];
+                if (driver->disconnection_callback == NULL) break;
+                driver->disconnection_callback(_enum_data.port);
+            }
 			_cleanup_enumeration();
             break;
 

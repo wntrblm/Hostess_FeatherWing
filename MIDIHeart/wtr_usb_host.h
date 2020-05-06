@@ -8,7 +8,7 @@
 /* Initialize host functionality */
 void wtr_usb_host_init(struct usb_h_desc *drv);
 
-void wtr_usb_host_register_enumeration_callback(wtr_usb_enumeration_callback cb);
+void wtr_usb_host_register_driver(struct wtr_usb_host_driver driver);
 
 
 // Later

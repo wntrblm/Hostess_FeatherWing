@@ -18,6 +18,7 @@ struct usb_h_pipe *_out_pipe;
 /* Private function forward declarations */
 
 static int32_t _handle_enumeration(struct usb_h_pipe*, struct usb_config_desc*);
+static int32_t _handle_disconnection(uint8_t port);
 static void _handle_pipe_in(struct usb_h_pipe*);
 static void _handle_pipe_out(struct usb_h_pipe*);
 
@@ -31,7 +32,11 @@ void wtr_usb_midi_host_init() {
     _in_queue.capacity = WTR_USB_MIDI_HOST_BUF_SIZE / USB_MIDI_EVENT_PACKET_SIZE;
     wtr_queue_init(&_in_queue);
 
-	wtr_usb_host_register_enumeration_callback(&_handle_enumeration);
+	struct wtr_usb_host_driver driver;
+	driver.enumeration_callback = _handle_enumeration;
+	driver.disconnection_callback = _handle_disconnection;
+
+	wtr_usb_host_register_driver(driver);
 };
 
 bool wtr_usb_midi_is_device_attached() {
@@ -123,6 +128,8 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 	}
 	
 	usb_h_pipe_register_callback(_out_pipe, _handle_pipe_out);
+
+	// TODO: Free pipe 0.
 	
 	printf("Pipes allocated!\r\n");
 	
@@ -132,6 +139,27 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 	if(result != ERR_NONE) {
 		printf("Failed to start bulk transfer!");
 	}
+}
+
+
+static int32_t _handle_disconnection(uint8_t port) {
+	printf("MIDI disconnection called.\r\n");
+
+	// TODO: check port!
+
+	if(_in_pipe != NULL) {
+		usb_h_pipe_free(_in_pipe);
+		_in_pipe = NULL;
+	}
+
+	if(_out_pipe != NULL) {
+		usb_h_pipe_free(_out_pipe);
+		_out_pipe = NULL;
+	}
+
+	// TODO: Reset the queues.
+
+	return ERR_NONE;
 }
 
 
