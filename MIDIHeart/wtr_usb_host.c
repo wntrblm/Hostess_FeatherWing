@@ -181,15 +181,27 @@ static void _handle_enumeration_event(enum EnumerationEvent event){
         
         case ENUM_E_CONFIG_SET:
 			printf("Enumeration successful.\r\n");
+			_enum_data.state = ENUM_S_READY;
+
+            // Find a driver for the device.
+            bool driver_found = false;
             for(size_t i = 0; i < WTR_USB_MAX_HOST_DRIVERS; i++) {
                 struct wtr_usb_host_driver *driver = &_host_drivers[i];
                 if (driver->enumeration_callback == NULL) break;
+
+                int32_t result = driver->enumeration_callback(_pipe_0, USB_STRUCT_PTR(usb_config_desc, &_enum_data.conf_desc));
                 
-				// TODO: Check return value, cleanup resources if needed, return if the driver handled it?
-                // TODO: The driver should now own endpoint 0, so let go of our ptr to it.
-                driver->enumeration_callback(_pipe_0, USB_STRUCT_PTR(usb_config_desc, &_enum_data.conf_desc));
+                if(result == ERR_NONE) {
+                    driver_found = true;
+                    break;
+                }
             }
-			_enum_data.state = ENUM_S_READY;
+            
+            // Did we find a driver for the device? if so, the driver is responsible for pipe 0, and should free it if its
+            // not needed. Otherwise it'll get handled by _cleanup_enumeration.
+            // TODO: De-address the device or otherwise disabled it???
+            if(driver_found) _pipe_0 = NULL;
+            _cleanup_enumeration();
             break;
 
         // Device disconnected. Teardown any enumeration resources and notify the device driver.
@@ -302,8 +314,9 @@ static int32_t _handle_config_descriptor() {
 
 
 static void _cleanup_enumeration() {
-	if(_pipe_0 != 0) {
+	if(_pipe_0 != NULL) {
 		usb_h_pipe_free(_pipe_0);
+        _pipe_0 = NULL;
 	}
 
 	_enum_data = (const struct EnumerationData){ 0 };
