@@ -197,8 +197,7 @@ void _handle_pipe_in(struct usb_h_pipe* pipe) {
             if(wtr_queue_is_full(&_in_queue)) {
                 // TODO: Record this error somewhere.
                 printf("MIDI in queue is full!\r\n");
-				return;
-                //break;
+                break;
             }
 
             wtr_queue_push(&_in_queue, event_ptr);

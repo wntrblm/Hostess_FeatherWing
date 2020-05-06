@@ -15,6 +15,8 @@ void wtr_queue_init(struct wtr_queue *q) {
 
 inline void _check_offsets(struct wtr_queue *q) {
 	#ifdef DEBUG
+		// queue is empty/full.
+		if(q->_count == q->capacity && q->_read_offset == q->_write_offset) return;
 		size_t tmp = q->_write_offset;
 		// deal with wrap-around
 		if (tmp < q->_read_offset) tmp += q->capacity;
