@@ -5,38 +5,56 @@
 #include "wtr_queue.h"
 
 
+enum HostessSpiCommands {
+	HTS_SPI_START_REQUEST = 0x81,
+	HTS_SPI_REQUEST_MIDI_EVENT = 0x83,
+	HTS_SPI_START_RESPONSE = 0x91,
+	HTS_SPI_RESPONSE_EMPTY = 0x92,
+	HTS_SPI_RESPONSE_MIDI_EVENT = 0x93,
+};
 
-void print_midi_events(struct wtr_queue* midi_queue) {
-	while(!wtr_queue_is_empty(midi_queue)) {
-		uint8_t event[4];
-		wtr_queue_pop(midi_queue, event);
-		printf("%02x %02x %02x %02x\r\n", event[0], event[1], event[2], event[3]);
-	}
-}
 
-
-static uint8_t spi_out_buf[5]; // One byte for the response start byte, 4 bytes for a midi event.
+static uint8_t spi_out_buf[6];
 static uint8_t spi_in_buf[1];
 
 void spi_respond(struct wtr_queue* midi_queue) {
+	int32_t recv_count;
 	struct io_descriptor *io;
 	spi_s_sync_get_io_descriptor(&SPI_0, &io);
 	
-	int32_t recv_count;
-	do {
-		recv_count = io_read(io, spi_in_buf, 1);
-	} while (recv_count == 0);
+	recv_count = io_read(io, spi_in_buf, 1);
+	if(recv_count == 0) return;
+
+	// First byte *must* be start request.
+	if(spi_in_buf[0] != HTS_SPI_START_REQUEST) return;
+
+	// read the next byte, it should be the request type.
+	recv_count = io_read(io, spi_in_buf, 1);
+	if(recv_count == 0) return;
+	uint8_t request = spi_in_buf[0];
+
 	
-	/* 42 = Get midi data */
-	if(spi_in_buf[0] == 42) {
-		
-		if(wtr_queue_is_empty(midi_queue)) {
-			memset(spi_out_buf, 0, 5);
-		} else {
-			wtr_queue_pop(midi_queue, spi_out_buf + 1);
-		}
-		spi_out_buf[0] = 43; // Response start byte
-		io_write(io, spi_out_buf, 5);
+	switch(request) {
+		case HTS_SPI_REQUEST_MIDI_EVENT:
+			// Start response start byte and type
+			spi_out_buf[0] = HTS_SPI_START_RESPONSE;
+
+			if(wtr_queue_is_empty(midi_queue)) {
+				spi_out_buf[1] = HTS_SPI_RESPONSE_EMPTY;
+				io_write(io, spi_out_buf, 2);
+			} else {
+				spi_out_buf[1] = HTS_SPI_RESPONSE_MIDI_EVENT;
+				// Pop the event on the queue to the SPI out buffer,
+				// but leave two bytes at the first from the
+				// response start and response type.
+				wtr_queue_pop(midi_queue, spi_out_buf + 2);
+				io_write(io, spi_out_buf, 6);
+			}
+			break;
+
+		default:
+			printf("Unknown SPI request: %u\r\n", request);
+			break;
 	}
 }
 
@@ -51,16 +69,10 @@ int main(void)
 	struct wtr_queue* midi_in_queue = wtr_usb_midi_get_in_queue();
 	
 	spi_s_sync_enable(&SPI_0);
+	
+	gpio_set_pin_level(LED, 1);
 
-	/* Replace with your application code */
 	while (1) {
-		gpio_set_pin_level(LED, 1);
-		//print_midi_events(in_queue);
-		//delay_ms(1000);
-		//printf(".");
-		gpio_set_pin_level(LED, 0);
-		//print_midi_events(in_queue);
-		//delay_ms(2000);
 		spi_respond(midi_in_queue);
 	}
 }
