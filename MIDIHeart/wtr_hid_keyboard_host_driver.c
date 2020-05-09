@@ -1,21 +1,20 @@
 #include <stdio.h>
+#include "usb_protocol.h"
+#include "usb_protocol_hid.h"
 #include "wtr_usb_host.h"
 #include "wtr_hid_keyboard_host_driver.h"
-
+#include "hid_keymap.h"
 
 
 /* Constants */
 
-#define USB_HID_IFACE_CLASS 0x03
-#define USB_HID_BOOT_IFACE_SUBCLASS 0x01
-#define USB_HID_KEYBOARD_REPORT_SIZE 8
 
 /* Global variables */
 
 struct usb_h_pipe *_in_pipe;
-uint8_t _in_pipe_buf[USB_HID_KEYBOARD_REPORT_SIZE];
-uint8_t _report[USB_HID_KEYBOARD_REPORT_SIZE];
-uint8_t _prev_report[USB_HID_KEYBOARD_REPORT_SIZE];
+uint8_t _in_pipe_buf[sizeof(hid_kbd_input_report_t)];
+hid_kbd_input_report_t _report;
+hid_kbd_input_report_t _prev_report;
 
 
 /* Private function forward declarations */
@@ -60,7 +59,9 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 
         if(usb_desc_type(pd) == USB_DT_INTERFACE) {
             struct usb_iface_desc *iface_desc = USB_STRUCT_PTR(usb_iface_desc, pd);
-            if( iface_desc->bInterfaceClass == USB_HID_IFACE_CLASS && iface_desc->bInterfaceSubClass == USB_HID_BOOT_IFACE_SUBCLASS ) {
+            if( iface_desc->bInterfaceClass == HID_CLASS
+                && iface_desc->bInterfaceSubClass == HID_SUB_CLASS_BOOT
+                && iface_desc->bInterfaceProtocol == HID_PROTOCOL_KEYBOARD) {
                 found_iface = true;
             } else {
                 found_iface = false;
@@ -144,12 +145,16 @@ static void _handle_pipe_in(struct usb_h_pipe* pipe) {
 		return;
 	}
 	
-	if (bii->count == USB_HID_KEYBOARD_REPORT_SIZE) {
-        memcpy(_report, bii->data, bii->count);
+	if (bii->count == sizeof(hid_kbd_input_report_t)) {
+        memcpy(_report.byte, bii->data, bii->count);
 
-        if(memcmp(_report, _prev_report, USB_HID_KEYBOARD_REPORT_SIZE) != 0) {
-            _print_bytes(_report, USB_HID_KEYBOARD_REPORT_SIZE);
-        memcpy(_prev_report, _report, USB_HID_KEYBOARD_REPORT_SIZE);
+        if(memcmp(_report.byte, _prev_report.byte, sizeof(hid_kbd_input_report_t)) != 0) {
+            //_print_bytes(_report.byte, sizeof(hid_kbd_input_report_t));
+            memcpy(_prev_report.byte, _report.byte, sizeof(hid_kbd_input_report_t));
+
+            if(_report.field.key[0] > 0 && _report.field.key[0] < 127) {
+                printf("%c\r\n", hid_to_ascii_map[_report.field.key[0]]);
+            }
         }
 	}
     else if (bii->count > 0) {
