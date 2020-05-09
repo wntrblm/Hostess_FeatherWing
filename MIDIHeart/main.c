@@ -2,6 +2,7 @@
 #include <hpl_delay.h>
 #include "wtr_usb_host.h"
 #include "wtr_midi_host_driver.h"
+#include "wtr_hid_keyboard_host_driver.h"
 #include "wtr_queue.h"
 
 
@@ -65,7 +66,8 @@ int main(void)
 	atmel_start_init();
 	
 	wtr_usb_host_init(&USB_0_inst);
-	wtr_usb_midi_host_init();
+	//wtr_usb_midi_host_init();
+	wtr_usb_hid_keyboard_init();
 	struct wtr_queue* midi_in_queue = wtr_usb_midi_get_in_queue();
 	
 	spi_s_sync_enable(&SPI_0);
