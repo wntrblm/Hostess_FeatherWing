@@ -159,17 +159,93 @@ static void _print_bytes(uint8_t* bytes, size_t len) {
 // Handles a new keyboard event and updates the keystring buffer
 // if needed.
 static void _handle_event_for_keystring(struct hid_keyboard_event *event) {
-    switch(event->type) {
-        case HID_KB_EVENT_KEY_PRESS:
-            if(event->keycode > 1 && event->keycode < 127) {
-                uint8_t ascii_val = hid_to_ascii_map[event->keycode];
-                if(!wtr_queue_is_full(&keystring_queue)) wtr_queue_push(&keystring_queue, &ascii_val);
-            }
-            break;
+    if(event->type != HID_KB_EVENT_KEY_PRESS) return;
+    if(event->keycode < 1 || event->keycode > 127) return;
 
-        default:
-            break;
+    uint8_t ascii_val = hid_to_ascii_map[event->keycode];
+
+    // Handle shifting
+    bool shifted = event->modifiers && (HID_KBD_L_SHIFT || HID_KBD_R_SHIFT);
+
+    if(shifted) {
+        // Letters.
+        if (ascii_val >= 'a' && ascii_val <= 'z') {
+            ascii_val -= 32;
+        }
+        
+        // Numbers & printable symbols
+        switch(ascii_val) {
+            case '`':
+                ascii_val = '~';
+                break;
+            case '1':
+                ascii_val = '!';
+                break;
+            case '2':
+                ascii_val = '@';
+                break;
+            case '3':
+                ascii_val = '#';
+                break;
+            case '4':
+                ascii_val = '$';
+                break;
+            case '5':
+                ascii_val = '%';
+                break;
+            case '6':
+                ascii_val = '^';
+                break;
+            case '7':
+                ascii_val = '&';
+                break;
+            case '8':
+                ascii_val = '*';
+                break;
+            case '9':
+                ascii_val = '(';
+                break;
+            case '0':
+                ascii_val = ')';
+                break;
+            case '-':
+                ascii_val = '_';
+                break;
+            case '+':
+                ascii_val = '=';
+                break;
+            case '[':
+                ascii_val = '{';
+                break;
+            case ']':
+                ascii_val = '}';
+                break;
+            case '\\':
+                ascii_val = '|';
+                break;
+            case ';':
+                ascii_val = ':';
+                break;
+            case '\'':
+                ascii_val = '"';
+                break;
+            case ',':
+                ascii_val = '<';
+                break;
+            case '.':
+                ascii_val = '>';
+                break;
+            case '/':
+                ascii_val = '?';
+                break;
+            default:
+                break;
+        }
     }
+
+    // TODO: Handle control characters.
+
+    if(!wtr_queue_is_full(&keystring_queue)) wtr_queue_push(&keystring_queue, &ascii_val);
 }
 
 
