@@ -4,8 +4,6 @@
 
 
 void wtr_queue_init(struct wtr_queue *q) {
-    // Make sure the capacity is evenly divisible by the size.
-    ASSERT(q->capacity % q->item_size == 0);
     ASSERT(q->data != NULL);
     q->_read_offset = 0;
     q->_write_offset = 0;
@@ -13,7 +11,7 @@ void wtr_queue_init(struct wtr_queue *q) {
 }
 
 
-inline void _check_offsets(struct wtr_queue *q) {
+inline void _check_offsets(volatile struct wtr_queue *q) {
 	#ifdef DEBUG
 		// queue is empty/full.
 		if(q->_count == q->capacity && q->_read_offset == q->_write_offset) return;
@@ -25,7 +23,7 @@ inline void _check_offsets(struct wtr_queue *q) {
 }
 
 
-void wtr_queue_push(struct wtr_queue *q, uint8_t *i) {
+void wtr_queue_push(volatile struct wtr_queue *q, uint8_t *i) {
     uint8_t *write_ptr =  q->data + (q->item_size * q->_write_offset);
 
     memcpy(write_ptr, i, q->item_size);
@@ -36,7 +34,7 @@ void wtr_queue_push(struct wtr_queue *q, uint8_t *i) {
 }
 
 
-void wtr_queue_pop(struct wtr_queue *q, uint8_t *i) {
+void wtr_queue_pop(volatile struct wtr_queue *q, uint8_t *i) {
     uint8_t *read_ptr =  q->data + (q->item_size * q->_read_offset);
 
     memcpy(i, read_ptr, q->item_size);
@@ -46,7 +44,7 @@ void wtr_queue_pop(struct wtr_queue *q, uint8_t *i) {
 	_check_offsets(q);
 }
 
-void wtr_queue_empty(struct wtr_queue *q) {
+void wtr_queue_empty(volatile struct wtr_queue *q) {
     q->_write_offset = 0;
     q->_read_offset = 0;
     q->_count = 0;

@@ -23,6 +23,8 @@ void spi_respond(struct wtr_queue* midi_queue) {
 	struct io_descriptor *io;
 	spi_s_sync_get_io_descriptor(&SPI_0, &io);
 	
+	// Note: this blocks until 1 byte is read it seems.
+	// Interrupts still happen, but maybe i should switch to async spi slave
 	recv_count = io_read(io, spi_in_buf, 1);
 	if(recv_count == 0) return;
 
@@ -69,12 +71,22 @@ int main(void)
 	//wtr_usb_midi_host_init();
 	wtr_usb_hid_keyboard_init();
 	struct wtr_queue* midi_in_queue = wtr_usb_midi_get_in_queue();
+	struct wtr_queue* keystring_queue = wtr_usb_hid_keyboard_get_keystring_queue();
 	
 	spi_s_sync_enable(&SPI_0);
 	
 	gpio_set_pin_level(LED, 1);
+	
+	volatile bool is_empty = true;
 
 	while (1) {
-		spi_respond(midi_in_queue);
+		//spi_respond(midi_in_queue);
+
+		is_empty = wtr_queue_is_empty(keystring_queue);
+		if(!is_empty) {
+			uint8_t char_val;
+			wtr_queue_pop(keystring_queue, &char_val);
+			printf("%c", char_val);
+		}
 	}
 }

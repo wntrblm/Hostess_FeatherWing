@@ -1,13 +1,16 @@
 #include <stdio.h>
 #include "usb_protocol.h"
 #include "usb_protocol_hid.h"
+#include "wtr_queue.h"
 #include "wtr_usb_host.h"
 #include "wtr_hid_keyboard_host_driver.h"
 #include "hid_keymap.h"
 
 
 /* Constants */
-
+#define EVENT_QUEUE_SIZE 64
+#define KEYSTRING_QUEUE_SIZE 64
+#define KEY_ERR_OVF 0x01
 
 /* Global variables */
 
@@ -15,6 +18,10 @@ struct usb_h_pipe *_in_pipe;
 uint8_t _in_pipe_buf[sizeof(hid_kbd_input_report_t)];
 hid_kbd_input_report_t _report;
 hid_kbd_input_report_t _prev_report;
+struct hid_keyboard_event event_queue_buf[sizeof(struct hid_keyboard_event) * EVENT_QUEUE_SIZE];
+struct wtr_queue event_queue;
+uint8_t keystring_queue_buf[KEYSTRING_QUEUE_SIZE];
+struct wtr_queue keystring_queue;
 
 
 /* Private function forward declarations */
@@ -26,12 +33,30 @@ static void _handle_pipe_in(struct usb_h_pipe* pipe);
 /* Public functions */
 
 void wtr_usb_hid_keyboard_init() {
+    event_queue.data = (uint8_t*)event_queue_buf;
+    event_queue.item_size = sizeof(struct hid_keyboard_event);
+    event_queue.capacity = EVENT_QUEUE_SIZE;
+    wtr_queue_init(&event_queue);
+
+    keystring_queue.data = (uint8_t*)keystring_queue_buf;
+    keystring_queue.item_size = sizeof(uint8_t);
+    keystring_queue.capacity = KEYSTRING_QUEUE_SIZE;
+    wtr_queue_init(&keystring_queue);
+
 	struct wtr_usb_host_driver driver;
 	driver.enumeration_callback = _handle_enumeration;
 	driver.disconnection_callback = _handle_disconnection;
 
 	wtr_usb_host_register_driver(driver);
 };
+
+struct wtr_queue* wtr_usb_hid_keyboard_get_event_queue() {
+    return &event_queue;
+}
+
+struct wtr_queue* wtr_usb_hid_keyboard_get_keystring_queue() {
+    return &keystring_queue;
+}
 
 
 /* Private functions */
@@ -122,11 +147,86 @@ static int32_t _handle_disconnection(uint8_t port) {
 }
 
 
+// TODO: Remove
 static void _print_bytes(uint8_t* bytes, size_t len) {
     for(size_t i = 0; i < len; i++) {
         printf("%2x ", bytes[i]);
     }
     printf("\r\n");
+}
+
+
+// Handles a new keyboard event and updates the keystring buffer
+// if needed.
+static void _handle_event_for_keystring(struct hid_keyboard_event *event) {
+    switch(event->type) {
+        case HID_KB_EVENT_KEY_PRESS:
+            if(event->keycode > 1 && event->keycode < 127) {
+                uint8_t ascii_val = hid_to_ascii_map[event->keycode];
+                if(!wtr_queue_is_full(&keystring_queue)) wtr_queue_push(&keystring_queue, &ascii_val);
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+
+// Called whenever a new, valid report comes in. Handles detecting
+// key presses and releases.
+static void _handle_report() {
+    // TODO: include control keys as well.
+    // TODO: There's a clever way to check for pressed and released keys at the
+    // same time, but I don't feel like figuring it out right now.
+    // Check for newly pressed keys.
+    for(size_t i = 0; i < 6; i++) {
+        bool found = false;
+        uint8_t curr_val = _report.field.key[i];
+
+        if(curr_val == 0 || curr_val == KEY_ERR_OVF) continue;
+
+        for(size_t j = 0; j < 6; j++) {
+            uint8_t prev_val = _prev_report.field.key[j];
+
+            if(curr_val == prev_val) found = true;
+        }
+
+        if(!found) {
+            struct hid_keyboard_event event;
+            event.type = HID_KB_EVENT_KEY_PRESS;
+            event.keycode = curr_val;
+            event.modifiers = _report.field.modifier.byte;
+            if(!wtr_queue_is_full(&event_queue)) wtr_queue_push(&event_queue, (uint8_t *)(&event));
+            _handle_event_for_keystring(&event);
+        }
+    }
+
+    // Check for newly released keys.
+    for(size_t i = 0; i < 6; i++) {
+        bool found = false;
+        uint8_t prev_val = _prev_report.field.key[i];
+
+        if(prev_val == 0 || prev_val == KEY_ERR_OVF) continue;
+
+        for(size_t j = 0; j < 6; j++) {
+            uint8_t curr_val = _report.field.key[j];
+
+            if(curr_val == prev_val) found = true;
+        }
+
+        if(!found) {
+            struct hid_keyboard_event event;
+            event.type = HID_KB_EVENT_KEY_RELEASE;
+            event.keycode = prev_val;
+            event.modifiers = _report.field.modifier.byte;
+            if(!wtr_queue_is_full(&event_queue)) wtr_queue_push(&event_queue, (uint8_t *)(&event));
+            _handle_event_for_keystring(&event);
+        }
+    }
+
+    // Copy the new report over the previous one.
+    memcpy(_prev_report.byte, _report.byte, sizeof(hid_kbd_input_report_t));
 }
 
 
@@ -148,13 +248,10 @@ static void _handle_pipe_in(struct usb_h_pipe* pipe) {
 	if (bii->count == sizeof(hid_kbd_input_report_t)) {
         memcpy(_report.byte, bii->data, bii->count);
 
+        // See if the new report is different from the last, if so, process the
+        // new events.
         if(memcmp(_report.byte, _prev_report.byte, sizeof(hid_kbd_input_report_t)) != 0) {
-            //_print_bytes(_report.byte, sizeof(hid_kbd_input_report_t));
-            memcpy(_prev_report.byte, _report.byte, sizeof(hid_kbd_input_report_t));
-
-            if(_report.field.key[0] > 0 && _report.field.key[0] < 127) {
-                printf("%c\r\n", hid_to_ascii_map[_report.field.key[0]]);
-            }
+            _handle_report();
         }
 	}
     else if (bii->count > 0) {
@@ -162,6 +259,7 @@ static void _handle_pipe_in(struct usb_h_pipe* pipe) {
     }
 	
 	// Make another request to the endpoint to continue polling.
+    // TODO: Use polling interval!
 	int32_t result = usb_h_bulk_int_iso_xfer(pipe, _in_pipe_buf, pipe->max_pkt_size, false);
 	
 	if(result != ERR_NONE) {
