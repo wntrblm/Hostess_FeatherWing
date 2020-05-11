@@ -1,7 +1,5 @@
 #pragma once
 
-#include "hal_usb_host.h"
-#include "usb_protocol.h"
 #include "wtr_usb_defs.h"
 
 /* Initialize host functionality */

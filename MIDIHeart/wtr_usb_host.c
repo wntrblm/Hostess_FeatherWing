@@ -16,8 +16,8 @@
             _enum_data.failure_reason = f_status;                                                                      \
             return _handle_enumeration_event(ENUM_E_FAILED);                                                           \
         }                                                                                                              \
-    \
-} while (0)
+                                                                                                                       \
+    } while (0)
 
 /* Constants and enumerations */
 
@@ -234,10 +234,11 @@ static void _handle_enumeration_event(enum enumeration_event event) {
             int32_t result =
                 driver->enumeration_callback(_pipe_0, USB_STRUCT_PTR(usb_config_desc, &_enum_data.conf_desc));
 
-            if (result == ERR_NONE) {
+            if (result == WTR_USB_HD_STATUS_SUCCESS) {
                 driver_found = true;
                 break;
             }
+            // TODO: check for WTR_USB_HD_STATUS_FAILED
         }
 
         // Did we find a driver for the device? if so, the driver is responsible for

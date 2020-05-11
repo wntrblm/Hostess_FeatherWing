@@ -44,8 +44,8 @@ void wtr_usb_hid_keyboard_init() {
     wtr_queue_init(&keystring_queue);
 
     struct wtr_usb_host_driver driver;
-    driver.enumeration_callback = _handle_enumeration;
-    driver.disconnection_callback = _handle_disconnection;
+    driver.enumeration_callback = &_handle_enumeration;
+    driver.disconnection_callback = &_handle_disconnection;
 
     wtr_usb_host_register_driver(driver);
 };
@@ -101,7 +101,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 
     if (in_ep == NULL) {
         printf("Could not find the IN endpoint.\r\n");
-        return;
+        return WTR_USB_HD_STATUS_UNSUPPORTED;
     }
 
     // This driver doesn't need pipe 0, so free it.
@@ -112,7 +112,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 
     if (_in_pipe == NULL) {
         printf("Failed to allocate IN pipe!\r\n");
-        return;
+        return WTR_USB_HD_STATUS_FAILED;
     }
 
     usb_h_pipe_register_callback(_in_pipe, _handle_pipe_in);
@@ -122,6 +122,8 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
     // Send the first read request to the IN endpoint. The callback will handle
     // scheduling polling.
     _poll();
+
+    return WTR_USB_HD_STATUS_SUCCESS;
 }
 
 static int32_t _handle_disconnection(uint8_t port) {
@@ -130,14 +132,8 @@ static int32_t _handle_disconnection(uint8_t port) {
         usb_h_pipe_free(_in_pipe);
         _in_pipe = NULL;
     }
-}
 
-// TODO: Remove
-static void _print_bytes(uint8_t *bytes, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-        printf("%2x ", bytes[i]);
-    }
-    printf("\r\n");
+    return ERR_NONE;
 }
 
 // Handles a new keyboard event and updates the keystring buffer
@@ -151,7 +147,7 @@ static void _handle_event_for_keystring(struct hid_keyboard_event *event) {
     uint8_t ascii_val = hid_to_ascii_map[event->keycode];
 
     // Handle shifting
-    bool shifted = event->modifiers && (HID_KBD_L_SHIFT || HID_KBD_R_SHIFT);
+    bool shifted = event->modifiers & (HID_KBD_L_SHIFT | HID_KBD_R_SHIFT);
 
     if (shifted) {
         // Letters.

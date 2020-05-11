@@ -32,8 +32,8 @@ void wtr_usb_midi_host_init() {
     wtr_queue_init(&_in_queue);
 
     struct wtr_usb_host_driver driver;
-    driver.enumeration_callback = _handle_enumeration;
-    driver.disconnection_callback = _handle_disconnection;
+    driver.enumeration_callback = &_handle_enumeration;
+    driver.disconnection_callback = &_handle_disconnection;
 
     wtr_usb_host_register_driver(driver);
 };
@@ -84,8 +84,9 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
         }
     }
 
-    if (in_ep == NULL) {
+    if (in_ep == NULL || out_ep == NULL) {
         printf("Could not find and IN and OUT endpoints.\r\n");
+        return WTR_USB_HD_STATUS_UNSUPPORTED;
     }
 
     _in_pipe = usb_h_pipe_allocate(pipe_0->hcd,
@@ -99,7 +100,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 
     if (_in_pipe == NULL) {
         printf("Failed to allocate IN pipe!\r\n");
-        return;
+        goto failed;
     }
 
     usb_h_pipe_register_callback(_in_pipe, _handle_pipe_in);
@@ -115,7 +116,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 
     if (_out_pipe == NULL) {
         printf("Failed to allocate OUT pipe!\r\n");
-        return;
+        goto failed;
     }
 
     usb_h_pipe_register_callback(_out_pipe, _handle_pipe_out);
@@ -131,7 +132,21 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 
     if (result != ERR_NONE) {
         printf("Failed to start bulk transfer!");
+        goto failed;
     }
+
+    return WTR_USB_HD_STATUS_SUCCESS;
+
+failed:
+    if (_in_pipe != NULL) {
+        usb_h_pipe_free(_in_pipe);
+        _in_pipe = NULL;
+    }
+    if (_out_pipe != NULL) {
+        usb_h_pipe_free(_in_pipe);
+        _out_pipe = NULL;
+    }
+    return WTR_USB_HD_STATUS_FAILED;
 }
 
 static int32_t _handle_disconnection(uint8_t port) {
