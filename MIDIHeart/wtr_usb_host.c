@@ -140,7 +140,7 @@ static void _handle_enumeration_event(enum EnumerationEvent event){
             printf("Port %u reset.\r\n", _enum_data.port);
             ENUM_CHECKED(
 				_create_pipe_0());
-			delay_ms(100);
+			delay_ms(150);
             ENUM_CHECKED(
 				wtr_usb_send_get_dev_desc_request(_pipe_0, req_buf, rep_buf, WTR_USB_REPLY_BUFFER_LEN));
 			_enum_data.state = ENUM_S_RESET;

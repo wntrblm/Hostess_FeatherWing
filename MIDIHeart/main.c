@@ -9,16 +9,20 @@
 enum HostessSpiCommands {
 	HTS_SPI_START_REQUEST = 0x81,
 	HTS_SPI_REQUEST_MIDI_EVENT = 0x83,
+	HTS_SPI_REQUEST_KB_STRING = 0x84,
+	HTS_SPI_REQUEST_KB_EVENT = 0x85,
 	HTS_SPI_START_RESPONSE = 0x91,
 	HTS_SPI_RESPONSE_EMPTY = 0x92,
 	HTS_SPI_RESPONSE_MIDI_EVENT = 0x93,
+	HTS_SPI_RESPONSE_KB_STRING = 0x94,
+	HTS_SPI_RESPONSE_KB_EVENT = 0x95,
 };
 
 
 static uint8_t spi_out_buf[6];
 static uint8_t spi_in_buf[1];
 
-void spi_respond(struct wtr_queue* midi_queue) {
+void spi_respond(struct wtr_queue *midi_queue, struct wtr_queue *keystring_queue) {
 	int32_t recv_count;
 	struct io_descriptor *io;
 	spi_s_sync_get_io_descriptor(&SPI_0, &io);
@@ -54,9 +58,23 @@ void spi_respond(struct wtr_queue* midi_queue) {
 				io_write(io, spi_out_buf, 6);
 			}
 			break;
+			
+		case HTS_SPI_REQUEST_KB_STRING:
+			// Start response start byte and type
+			spi_out_buf[0] = HTS_SPI_START_RESPONSE;
+			
+			if(wtr_queue_is_empty(keystring_queue)) {
+				spi_out_buf[1] = HTS_SPI_RESPONSE_EMPTY;
+				io_write(io, spi_out_buf, 2);
+			} else {
+				spi_out_buf[1] = HTS_SPI_RESPONSE_KB_STRING;
+				wtr_queue_pop(keystring_queue, spi_out_buf + 2);
+				io_write(io, spi_out_buf, 3);
+			}
+			break;
 
 		default:
-			printf("Unknown SPI request: %u\r\n", request);
+			printf("Unknown SPI request: 0x%02x\r\n", request);
 			break;
 	}
 }
@@ -76,17 +94,8 @@ int main(void)
 	spi_s_sync_enable(&SPI_0);
 	
 	gpio_set_pin_level(LED, 1);
-	
-	volatile bool is_empty = true;
 
 	while (1) {
-		//spi_respond(midi_in_queue);
-
-		is_empty = wtr_queue_is_empty(keystring_queue);
-		if(!is_empty) {
-			uint8_t char_val;
-			wtr_queue_pop(keystring_queue, &char_val);
-			printf("%c", char_val);
-		}
+		spi_respond(midi_in_queue, keystring_queue);
 	}
 }
