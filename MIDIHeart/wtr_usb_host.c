@@ -44,7 +44,7 @@
 #define WTR_USB_MAX_HOST_DRIVERS 10
 
 
-enum EnumerationState {
+enum enumeration_state {
 	// There's no device attached.
     ENUM_S_UNATTACHED,
 	// A device has just been attached and not yet reset or addressed.
@@ -63,7 +63,7 @@ enum EnumerationState {
 	ENUM_S_FAILED,
 };
 
-enum EnumerationEvent {
+enum enumeration_event {
 	ENUM_E_CONNECTED,
 	ENUM_E_DISCONNECTED,
     ENUM_E_RESET,
@@ -78,8 +78,8 @@ enum EnumerationEvent {
 
 struct usb_h_desc *_drv;
 struct usb_h_pipe *_pipe_0;
-struct EnumerationData {
-	enum EnumerationState state;
+struct enumeration_data {
+	enum enumeration_state state;
     uint8_t port;
     int32_t speed;
     uint8_t address;
@@ -94,7 +94,7 @@ size_t _host_driver_count = 0;
 /* Private function forward declarations. */
 
 
-static void _handle_enumeration_event(enum EnumerationEvent);
+static void _handle_enumeration_event(enum enumeration_event);
 static int32_t _create_pipe_0();
 static int32_t _handle_device_descriptor();
 static int32_t _handle_config_descriptor();
@@ -126,7 +126,7 @@ void wtr_usb_host_register_driver(struct wtr_usb_host_driver driver) {
     either root hub events or pipe 0 data transfers and steps through the
     enumeration process.
 */
-static void _handle_enumeration_event(enum EnumerationEvent event){
+static void _handle_enumeration_event(enum enumeration_event event){
     switch(event) {
         // Device newly connected, reset its port.
         case ENUM_E_CONNECTED:
@@ -326,7 +326,7 @@ static void _cleanup_enumeration() {
         _pipe_0 = NULL;
 	}
 
-	_enum_data = (const struct EnumerationData){ 0 };
+	_enum_data = (const struct enumeration_data){ 0 };
 }
 
 
