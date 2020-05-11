@@ -98,14 +98,14 @@ struct scheduled_func_desc {
 
 /* Global variables used across this module. */
 
-struct usb_h_desc *_drv;
-struct usb_h_pipe *_pipe_0;
-struct enumeration_data _enum_data;
-uint8_t req_buf[64];
-uint8_t rep_buf[WTR_USB_REPLY_BUFFER_LEN];
-struct wtr_usb_host_driver _host_drivers[WTR_USB_MAX_HOST_DRIVERS];
-size_t _host_driver_count = 0;
-struct scheduled_func_desc _scheduled_funcs[WTR_USB_MAX_SCHEDULED_FUNCS];
+static struct usb_h_desc *_drv;
+static struct usb_h_pipe *_pipe_0;
+static struct enumeration_data _enum_data;
+static uint8_t req_buf[64];
+static uint8_t rep_buf[WTR_USB_REPLY_BUFFER_LEN];
+static struct wtr_usb_host_driver _host_drivers[WTR_USB_MAX_HOST_DRIVERS];
+static size_t _host_driver_count = 0;
+static struct scheduled_func_desc _scheduled_funcs[WTR_USB_MAX_SCHEDULED_FUNCS];
 
 /* Private function forward declarations. */
 

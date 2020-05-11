@@ -8,20 +8,21 @@
 
 
 /* Constants */
+
 #define EVENT_QUEUE_SIZE 64
 #define KEYSTRING_QUEUE_SIZE 64
 #define KEY_ERR_OVF 0x01
 
 /* Global variables */
 
-struct usb_h_pipe *_in_pipe;
-uint8_t _in_pipe_buf[sizeof(hid_kbd_input_report_t)];
-hid_kbd_input_report_t _report;
-hid_kbd_input_report_t _prev_report;
-struct hid_keyboard_event event_queue_buf[sizeof(struct hid_keyboard_event) * EVENT_QUEUE_SIZE];
-struct wtr_queue event_queue;
-uint8_t keystring_queue_buf[KEYSTRING_QUEUE_SIZE];
-struct wtr_queue keystring_queue;
+static struct usb_h_pipe *_in_pipe;
+static uint8_t _in_pipe_buf[sizeof(hid_kbd_input_report_t)];
+static hid_kbd_input_report_t _report;
+static hid_kbd_input_report_t _prev_report;
+static struct hid_keyboard_event event_queue_buf[sizeof(struct hid_keyboard_event) * EVENT_QUEUE_SIZE];
+static struct wtr_queue event_queue;
+static uint8_t keystring_queue_buf[KEYSTRING_QUEUE_SIZE];
+static struct wtr_queue keystring_queue;
 
 
 /* Private function forward declarations */

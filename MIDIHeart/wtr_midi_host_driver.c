@@ -3,16 +3,18 @@
 #include "wtr_midi_host_driver.h"
 
 /* Constants and macros */
+
 #define USB_MIDI_EVENT_PACKET_SIZE 4
 
 /* Global variables */
-uint8_t _in_queue_data[WTR_USB_MIDI_HOST_BUF_SIZE];
-struct wtr_queue _in_queue;
-uint8_t _out_buf[WTR_USB_MIDI_HOST_BUF_SIZE];
-uint8_t _in_pipe_buf[64];
-uint8_t _out_pipe_buf[64];
-struct usb_h_pipe *_in_pipe;
-struct usb_h_pipe *_out_pipe;
+
+static uint8_t _in_queue_data[WTR_USB_MIDI_HOST_BUF_SIZE];
+static struct wtr_queue _in_queue;
+static uint8_t _out_buf[WTR_USB_MIDI_HOST_BUF_SIZE];
+static uint8_t _in_pipe_buf[64];
+static uint8_t _out_pipe_buf[64];
+static struct usb_h_pipe *_in_pipe;
+static struct usb_h_pipe *_out_pipe;
 
 
 /* Private function forward declarations */
@@ -24,7 +26,6 @@ static void _handle_pipe_out(struct usb_h_pipe*);
 
 
 /* Public functions */
-
 
 void wtr_usb_midi_host_init() {
     _in_queue.data = _in_queue_data;
@@ -92,7 +93,6 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 	
 	if(in_ep == NULL) {
 		printf("Could not find and IN and OUT endpoints.\r\n");
-		return;
 	}
 	
 	_in_pipe = usb_h_pipe_allocate(
@@ -168,7 +168,7 @@ static int32_t _handle_disconnection(uint8_t port) {
 }
 
 
-void _handle_pipe_in(struct usb_h_pipe* pipe) {
+static void _handle_pipe_in(struct usb_h_pipe* pipe) {
 	// bii is the bulk/iso/interupt transfer status.
 	struct usb_h_bulk_int_iso_xfer* bii = &pipe->x.bii;
 	
