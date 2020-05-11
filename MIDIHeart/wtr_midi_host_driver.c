@@ -151,11 +151,13 @@ static int32_t _handle_disconnection(uint8_t port) {
 	// relationships.
 
 	if(_in_pipe != NULL) {
+		usb_h_pipe_abort(_in_pipe);
 		usb_h_pipe_free(_in_pipe);
 		_in_pipe = NULL;
 	}
 
 	if(_out_pipe != NULL) {
+		usb_h_pipe_abort(_in_pipe);
 		usb_h_pipe_free(_out_pipe);
 		_out_pipe = NULL;
 	}
@@ -169,6 +171,9 @@ static int32_t _handle_disconnection(uint8_t port) {
 void _handle_pipe_in(struct usb_h_pipe* pipe) {
 	// bii is the bulk/iso/interupt transfer status.
 	struct usb_h_bulk_int_iso_xfer* bii = &pipe->x.bii;
+	
+	// Pipe closed due to disconnect.
+	if (bii->status == USB_H_ABORT) return;
 	
 	if (bii->status != USB_H_OK) {
 		printf(

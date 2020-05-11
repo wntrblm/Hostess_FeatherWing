@@ -110,6 +110,10 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 		return;
 	}
 	
+	// This driver doesn't need pipe 0, so free it.
+	usb_h_pipe_free(pipe_0);
+
+	
 	_in_pipe = usb_h_pipe_allocate(
 		pipe_0->hcd,
 		pipe_0->dev,
@@ -128,9 +132,6 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 	
 	usb_h_pipe_register_callback(_in_pipe, _handle_pipe_in);
 	
-	// This driver doesn't need pipe 0, so free it.
-	usb_h_pipe_free(pipe_0);
-	
 	printf("Pipes allocated!\r\n");
 	
 	// Send the first read request to the IN endpoint. The callback will handle polling.
@@ -143,7 +144,11 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 
 
 static int32_t _handle_disconnection(uint8_t port) {
-    printf("Please implement handle disconnection for usb hid keyboard.\r\n");
+    if(_in_pipe != NULL) {
+		usb_h_pipe_abort(_in_pipe);
+        usb_h_pipe_free(_in_pipe);
+        _in_pipe = NULL;
+    }
 }
 
 
@@ -309,6 +314,9 @@ static void _handle_report() {
 static void _handle_pipe_in(struct usb_h_pipe* pipe) {
 	// bii is the bulk/iso/interupt transfer status.
 	struct usb_h_bulk_int_iso_xfer* bii = &pipe->x.bii;
+	
+	// Pipe closed due to disconnect.
+	if (bii->status == USB_H_ABORT) return;
 	
 	if (bii->status != USB_H_OK) {
 		printf(
