@@ -28,6 +28,7 @@ struct wtr_queue keystring_queue;
 
 static int32_t _handle_enumeration(struct usb_h_pipe*, struct usb_config_desc*);
 static int32_t _handle_disconnection(uint8_t port);
+static void _poll();
 static void _handle_pipe_in(struct usb_h_pipe* pipe);
 
 /* Public functions */
@@ -134,12 +135,8 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 	
 	printf("Pipes allocated!\r\n");
 	
-	// Send the first read request to the IN endpoint. The callback will handle polling.
-	int32_t result = usb_h_bulk_int_iso_xfer(_in_pipe, _in_pipe_buf, _in_pipe->max_pkt_size, false);
-	
-	if(result != ERR_NONE) {
-		printf("Failed to start bulk transfer!");
-	}
+	// Send the first read request to the IN endpoint. The callback will handle scheduling polling.
+    _poll();
 }
 
 
@@ -311,6 +308,16 @@ static void _handle_report() {
 }
 
 
+// Called to send a request to poll the device for a new report. This is
+// scheduled whenever a successful report comes in.
+static void _poll() {
+	int32_t result = usb_h_bulk_int_iso_xfer(_in_pipe, _in_pipe_buf, _in_pipe->max_pkt_size, false);
+	
+	if(result != ERR_NONE) {
+		printf("Failed to start bulk transfer!");
+	}
+}
+
 static void _handle_pipe_in(struct usb_h_pipe* pipe) {
 	// bii is the bulk/iso/interupt transfer status.
 	struct usb_h_bulk_int_iso_xfer* bii = &pipe->x.bii;
@@ -343,10 +350,5 @@ static void _handle_pipe_in(struct usb_h_pipe* pipe) {
     }
 	
 	// Make another request to the endpoint to continue polling.
-    // TODO: Use polling interval!
-	int32_t result = usb_h_bulk_int_iso_xfer(pipe, _in_pipe_buf, pipe->max_pkt_size, false);
-	
-	if(result != ERR_NONE) {
-		printf("Failed to start bulk transfer!");
-	}
+    wtr_usb_host_schedule_func(&_poll, pipe->interval);
 }

@@ -136,7 +136,7 @@ void wtr_usb_host_register_driver(struct wtr_usb_host_driver driver) {
     _host_driver_count++;
 }
 
-void wtr_usb_host_register_scheduled_func(wtr_usb_scheduled_func func, uint32_t delay) {
+void wtr_usb_host_schedule_func(wtr_usb_scheduled_func func, uint32_t delay) {
 	bool assigned = false;
 	for(uint32_t i = 0; i < WTR_USB_MAX_SCHEDULED_FUNCS; i++) {
 		if(_scheduled_funcs[i].func == NULL) {
@@ -178,7 +178,7 @@ static void _handle_enumeration_event(enum enumeration_event event){
 
 			// The device needs some time to reset, so schedule a continuation.
 			// This will pick up at ENUM_E_RESET_COMPLETE.
-			wtr_usb_host_register_scheduled_func(&_continue_enumeration, 150);
+			wtr_usb_host_schedule_func(&_continue_enumeration, 150);
 			break;
 		
 		case ENUM_E_RESET_COMPLETE:
@@ -205,7 +205,7 @@ static void _handle_enumeration_event(enum enumeration_event event){
 				usb_h_pipe_set_control_param(_pipe_0, _enum_data.address, 0, _pipe_0->max_pkt_size, _pipe_0->speed));
             // Wait a little bit before asking for the config descriptor, since some devices need
 			// a little bit more time. This will pick up at ENUM_E_ADDRESS_SET_COMPLETE.
-			wtr_usb_host_register_scheduled_func(&_continue_enumeration, 5);
+			wtr_usb_host_schedule_func(&_continue_enumeration, 5);
 			break;
 
 		case ENUM_E_ADDRESS_SET_COMPLETE:
