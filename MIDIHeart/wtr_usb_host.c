@@ -42,6 +42,8 @@
 #define WTR_USB_REPLY_BUFFER_LEN 255
 /** Max number of drivers */
 #define WTR_USB_MAX_HOST_DRIVERS 10
+/** Number of scheduled funcs allowed */
+#define WTR_USB_MAX_SCHEDULED_FUNCS 16
 
 
 enum enumeration_state {
@@ -67,38 +69,54 @@ enum enumeration_event {
 	ENUM_E_CONNECTED,
 	ENUM_E_DISCONNECTED,
     ENUM_E_RESET,
+	ENUM_E_RESET_COMPLETE,
     ENUM_E_DEV_DESC_READ,
     ENUM_E_ADDRESS_SET,
+	ENUM_E_ADDRESS_SET_COMPLETE,
     ENUM_E_CONF_DESC_READ,
     ENUM_E_CONFIG_SET,
 	ENUM_E_FAILED,
 };
 
-/* Global variables used across this module. */
+/* Structs */
 
-struct usb_h_desc *_drv;
-struct usb_h_pipe *_pipe_0;
 struct enumeration_data {
+	enum enumeration_event event;
 	enum enumeration_state state;
     uint8_t port;
     int32_t speed;
     uint8_t address;
 	uint8_t conf_desc[WTR_USB_REPLY_BUFFER_LEN];
 	int32_t failure_reason;
-} _enum_data;
+};
+
+struct scheduled_func_desc {
+	uint32_t delay;
+	wtr_usb_scheduled_func func;
+};
+
+
+/* Global variables used across this module. */
+
+struct usb_h_desc *_drv;
+struct usb_h_pipe *_pipe_0;
+struct enumeration_data _enum_data;
 uint8_t req_buf[64];
 uint8_t rep_buf[WTR_USB_REPLY_BUFFER_LEN];
 struct wtr_usb_host_driver _host_drivers[WTR_USB_MAX_HOST_DRIVERS];
 size_t _host_driver_count = 0;
+struct scheduled_func_desc _scheduled_funcs[WTR_USB_MAX_SCHEDULED_FUNCS];
 
 /* Private function forward declarations. */
 
 
 static void _handle_enumeration_event(enum enumeration_event);
+static void _continue_enumeration();
 static int32_t _create_pipe_0();
 static int32_t _handle_device_descriptor();
 static int32_t _handle_config_descriptor();
 static void _cleanup_enumeration();
+static void _handle_start_of_frame(struct usb_h_desc *);
 static void _handle_pipe_0_xfer_done(struct usb_h_pipe *);
 static void _handle_root_hub_change_event(struct usb_h_desc *, uint8_t, uint8_t);
 
@@ -107,6 +125,7 @@ static void _handle_root_hub_change_event(struct usb_h_desc *, uint8_t, uint8_t)
 
 void wtr_usb_host_init(struct usb_h_desc *drv) {
     usb_h_register_callback(drv, USB_H_CB_ROOTHUB_CHANGE, (FUNC_PTR)_handle_root_hub_change_event);
+	usb_h_register_callback(drv, USB_H_CB_SOF, (FUNC_PTR)_handle_start_of_frame);
 	usb_h_enable(drv);
     _drv = drv;
 }
@@ -115,6 +134,20 @@ void wtr_usb_host_register_driver(struct wtr_usb_host_driver driver) {
     ASSERT(_host_driver_count != WTR_USB_MAX_HOST_DRIVERS);
     _host_drivers[_host_driver_count] = driver;
     _host_driver_count++;
+}
+
+void wtr_usb_host_register_scheduled_func(wtr_usb_scheduled_func func, uint32_t delay) {
+	bool assigned = false;
+	for(uint32_t i = 0; i < WTR_USB_MAX_SCHEDULED_FUNCS; i++) {
+		if(_scheduled_funcs[i].func == NULL) {
+			_scheduled_funcs[i].func = func;
+			_scheduled_funcs[i].delay = delay;
+			assigned = true;
+			break;
+		}
+	}
+
+	ASSERT(assigned);
 }
 
 
@@ -127,6 +160,8 @@ void wtr_usb_host_register_driver(struct wtr_usb_host_driver driver) {
     enumeration process.
 */
 static void _handle_enumeration_event(enum enumeration_event event){
+	_enum_data.event = event;
+
     switch(event) {
         // Device newly connected, reset its port.
         case ENUM_E_CONNECTED:
@@ -140,7 +175,13 @@ static void _handle_enumeration_event(enum enumeration_event event){
             printf("Port %u reset.\r\n", _enum_data.port);
             ENUM_CHECKED(
 				_create_pipe_0());
-			delay_ms(150);
+
+			// The device needs some time to reset, so schedule a continuation.
+			// This will pick up at ENUM_E_RESET_COMPLETE.
+			wtr_usb_host_register_scheduled_func(&_continue_enumeration, 150);
+			break;
+		
+		case ENUM_E_RESET_COMPLETE:
             ENUM_CHECKED(
 				wtr_usb_send_get_dev_desc_request(_pipe_0, req_buf, rep_buf, WTR_USB_REPLY_BUFFER_LEN));
 			_enum_data.state = ENUM_S_RESET;
@@ -162,8 +203,12 @@ static void _handle_enumeration_event(enum enumeration_event event){
 			printf("Address set\r\n");
 	        ENUM_CHECKED(
 				usb_h_pipe_set_control_param(_pipe_0, _enum_data.address, 0, _pipe_0->max_pkt_size, _pipe_0->speed));
-            // Wait before asking for the conf descriptor. TODO: Maybe move this to a queue.
-	        delay_ms(5);
+            // Wait a little bit before asking for the config descriptor, since some devices need
+			// a little bit more time. This will pick up at ENUM_E_ADDRESS_SET_COMPLETE.
+			wtr_usb_host_register_scheduled_func(&_continue_enumeration, 5);
+			break;
+
+		case ENUM_E_ADDRESS_SET_COMPLETE:
 	        ENUM_CHECKED(
 				wtr_usb_send_get_conf_desc_request(_pipe_0, 0, req_buf, rep_buf, sizeof(usb_config_desc_t)));
 			_enum_data.state = ENUM_S_ADDRESSED;
@@ -223,6 +268,16 @@ static void _handle_enumeration_event(enum enumeration_event event){
 			_cleanup_enumeration();
             break;
     }
+}
+
+
+/* This is used when a delay is needed in the enumeration process.
+Instead of calling "delay_ms", it uses the start-of-frame callback to trigger a function
+call after a certain amount of time. This function simply goes to the next enumeration
+event.
+*/
+static void _continue_enumeration() {
+	_handle_enumeration_event(_enum_data.event + 1);
 }
 
 
@@ -332,6 +387,23 @@ static void _cleanup_enumeration() {
 
 
 /* HAL -> wtr adapters and such */
+
+
+/* Start of frame callback.
+Mostly used for timing and queueing later requests and such.
+*/
+static void _handle_start_of_frame(struct usb_h_desc *drv) {
+	// Go through each scheduled func and count down their delay.
+	// if it hits zero, trigger the func and clear it.
+	for(uint32_t i = 0; i < WTR_USB_MAX_SCHEDULED_FUNCS; i++) {
+		if(_scheduled_funcs[i].func == NULL) continue;
+		_scheduled_funcs[i].delay--;
+		if(_scheduled_funcs[i].delay != 0) continue;
+
+		_scheduled_funcs[i].func();
+		_scheduled_funcs[i].func = NULL;
+	}
+}
 
 /* Handles root hub events from the usb host HAL.
     Triggers the appropriate enumeration event. - The goal here is to adapt from their

@@ -8,6 +8,8 @@
 typedef int32_t (*wtr_usb_enumeration_callback)(struct usb_h_pipe *pipe_0, struct usb_config_desc *config_descriptor_header);
 // Disconnection callback function
 typedef int32_t (*wtr_usb_disconnection_callback)(uint8_t port);
+// Scheduled function
+typedef void (*wtr_usb_scheduled_func)(void);
 
 
 // Host driver structure
