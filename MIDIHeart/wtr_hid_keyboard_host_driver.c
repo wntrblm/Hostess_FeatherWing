@@ -23,8 +23,11 @@
 
 /* Global variables */
 
+static struct usb_h_pipe *_ctrl_pipe;
+static uint8_t _ctrl_req_buf[sizeof(struct usb_req) + 1];
 static struct usb_h_pipe *_in_pipe;
 static uint8_t _in_pipe_buf[sizeof(hid_kbd_input_report_t)];
+static uint8_t _locking_keys;
 static hid_kbd_input_report_t _report;
 static hid_kbd_input_report_t _prev_report;
 static struct hid_keyboard_event event_queue_buf[sizeof(struct hid_keyboard_event) * EVENT_QUEUE_SIZE];
@@ -38,6 +41,10 @@ static int32_t _handle_enumeration(struct usb_h_pipe *, struct usb_config_desc *
 static int32_t _handle_disconnection(uint8_t port);
 static void _poll();
 static void _handle_pipe_in(struct usb_h_pipe *pipe);
+static void _handle_ctrl_pipe(struct usb_h_pipe *pipe);
+static void _handle_event_for_locking_keys(struct hid_keyboard_event *event);
+static void _handle_event_for_keystring(struct hid_keyboard_event *event);
+static void _handle_report();
 static inline void _handle_report_control_key_helper(uint8_t prev_bit, uint8_t curr_bit, uint8_t keycode,
                                                      uint8_t modifiers);
 
@@ -115,18 +122,18 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
         return WTR_USB_HD_STATUS_UNSUPPORTED;
     }
 
-    // This driver doesn't need pipe 0, so free it.
-    usb_h_pipe_free(pipe_0);
-
     _in_pipe = usb_h_pipe_allocate(pipe_0->hcd, pipe_0->dev, in_ep->bEndpointAddress, in_ep->wMaxPacketSize,
                                    in_ep->bmAttributes, in_ep->bInterval, pipe_0->speed, true);
 
     if (_in_pipe == NULL) {
         printf("Failed to allocate IN pipe!\r\n");
-        return WTR_USB_HD_STATUS_FAILED;
+        goto failed;
     }
 
     usb_h_pipe_register_callback(_in_pipe, _handle_pipe_in);
+
+    // We need pipe0 to send SetReport requests to set the LED status.
+    _ctrl_pipe = pipe_0;
 
     printf("Pipes allocated!\r\n");
 
@@ -135,6 +142,17 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
     _poll();
 
     return WTR_USB_HD_STATUS_SUCCESS;
+
+failed:
+    if (_in_pipe != NULL) {
+        usb_h_pipe_free(_in_pipe);
+        _in_pipe = NULL;
+    }
+    if (_ctrl_pipe != NULL) {
+        usb_h_pipe_free(_ctrl_pipe);
+        _ctrl_pipe = NULL;
+    }
+    return WTR_USB_HD_STATUS_FAILED;
 }
 
 static int32_t _handle_disconnection(uint8_t port) {
@@ -142,6 +160,12 @@ static int32_t _handle_disconnection(uint8_t port) {
         usb_h_pipe_abort(_in_pipe);
         usb_h_pipe_free(_in_pipe);
         _in_pipe = NULL;
+    }
+
+    if (_ctrl_pipe != NULL) {
+        usb_h_pipe_abort(_ctrl_pipe);
+        usb_h_pipe_free(_ctrl_pipe);
+        _ctrl_pipe = NULL;
     }
 
     return ERR_NONE;
@@ -158,6 +182,7 @@ static void _handle_event_for_keystring(struct hid_keyboard_event *event) {
     uint8_t ascii_val = hid_to_ascii_map[event->keycode];
 
     // Handle shifting
+    // TODO: Handle caps and num lock.
     bool shifted = event->modifiers & (HID_KBD_L_SHIFT | HID_KBD_R_SHIFT);
 
     if (shifted) {
@@ -242,6 +267,36 @@ static void _handle_event_for_keystring(struct hid_keyboard_event *event) {
         wtr_queue_push(&keystring_queue, &ascii_val);
 }
 
+// Handles updating the locking keys and LEDs whenever a there's a key event for
+// caps lock, scroll lock, or num lock.
+static void _handle_event_for_locking_keys(struct hid_keyboard_event *event) {
+    bool changed = true;
+
+    switch (event->keycode) {
+    case HID_CAPS_LOCK:
+        _locking_keys ^= HID_LED_CAPS_LOCK;
+        break;
+
+    case HID_SCROLL_LOCK:
+        _locking_keys ^= HID_LED_SCROLL_LOCK;
+        break;
+
+    case HID_KBD_NUM_LOCK:
+        _locking_keys ^= HID_LED_NUM_LOCK;
+        break;
+
+    default:
+        changed = false;
+        break;
+    }
+
+    if (changed) {
+        usb_fill_SetReport_req((struct usb_req *)_ctrl_req_buf, REPORT_TYPE_OUTPUT, 0, 0, 1);
+        _ctrl_req_buf[sizeof(struct usb_req)] = _locking_keys;
+        usb_h_control_xfer(_ctrl_pipe, _ctrl_req_buf, _ctrl_req_buf + 8, 1, 500);
+    }
+}
+
 // Called whenever a new, valid report comes in. Handles detecting
 // key presses and releases.
 static void _handle_report() {
@@ -270,6 +325,7 @@ static void _handle_report() {
             if (!wtr_queue_is_full(&event_queue))
                 wtr_queue_push(&event_queue, (uint8_t *)(&event));
             _handle_event_for_keystring(&event);
+            _handle_event_for_locking_keys(&event);
         }
     }
 
@@ -296,6 +352,7 @@ static void _handle_report() {
             if (!wtr_queue_is_full(&event_queue))
                 wtr_queue_push(&event_queue, (uint8_t *)(&event));
             _handle_event_for_keystring(&event);
+            // don't send events for locking key release.
         }
     }
 
@@ -378,3 +435,5 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
     // Make another request to the endpoint to continue polling.
     wtr_usb_host_schedule_func(&_poll, pipe->interval);
 }
+
+static void _handle_ctrl_pipe(struct usb_h_pipe *pipe) {}

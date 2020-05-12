@@ -519,7 +519,7 @@ static inline void usb_fill_GetReport_req(struct usb_req *req, uint8_t type, uin
 static inline void usb_fill_SetReport_req(struct usb_req *req, uint8_t type, uint8_t id, uint8_t iface, uint16_t len)
 {
 	req->bmRequestType = 0x21;
-	req->bRequest      = USB_REQ_HID_GET_REPORT;
+	req->bRequest      = USB_REQ_HID_SET_REPORT;
 	req->wValue        = (type << 8) | id;
 	req->wIndex        = iface;
 	req->wLength       = len;

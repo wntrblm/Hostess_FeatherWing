@@ -224,6 +224,10 @@ static void _handle_enumeration_event(enum enumeration_event event) {
         printf("Enumeration successful.\r\n");
         _enum_data.state = ENUM_S_READY;
 
+        // Remove the callback for pipe 0. If the driver uses it,
+        // we don't want our callback to be invoked anymore.
+        usb_h_pipe_register_callback(_pipe_0, NULL);
+
         // Find a driver for the device.
         bool driver_found = false;
         for (size_t i = 0; i < WTR_USB_MAX_HOST_DRIVERS; i++) {
@@ -238,7 +242,7 @@ static void _handle_enumeration_event(enum enumeration_event event) {
                 driver_found = true;
                 break;
             }
-            // TODO: check for WTR_USB_HD_STATUS_FAILED
+            // TODO: check for WTR_USB_HD_STATUS_FAILED, make sure ctrl_pipe gets cleaned up.
         }
 
         // Did we find a driver for the device? if so, the driver is responsible for
