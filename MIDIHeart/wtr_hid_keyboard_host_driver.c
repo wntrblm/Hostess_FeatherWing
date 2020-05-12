@@ -12,6 +12,15 @@
 #define KEYSTRING_QUEUE_SIZE 64
 #define KEY_ERR_OVF 0x01
 
+#define HID_LEFTCTRL 0xe0    // Keyboard Left Control
+#define HID_LEFTSHIFT 0xe1   // Keyboard Left Shift
+#define HID_LEFTALT 0xe2     // Keyboard Left Alt
+#define HID_LEFTMETA 0xe3    // Keyboard Left GUI
+#define HID_RIGHTCTRL 0xe4   // Keyboard Right Control
+#define HID_RIGHTSHIFT 0xe5  // Keyboard Right Shift
+#define HID_RIGHTALT 0xe6    // Keyboard Right Alt
+#define HID_RIGHTMETA 0xe7   // Keyboard Right GUI
+
 /* Global variables */
 
 static struct usb_h_pipe *_in_pipe;
@@ -29,6 +38,8 @@ static int32_t _handle_enumeration(struct usb_h_pipe *, struct usb_config_desc *
 static int32_t _handle_disconnection(uint8_t port);
 static void _poll();
 static void _handle_pipe_in(struct usb_h_pipe *pipe);
+static inline void _handle_report_control_key_helper(uint8_t prev_bit, uint8_t curr_bit, uint8_t keycode,
+                                                     uint8_t modifiers);
 
 /* Public functions */
 
@@ -234,7 +245,6 @@ static void _handle_event_for_keystring(struct hid_keyboard_event *event) {
 // Called whenever a new, valid report comes in. Handles detecting
 // key presses and releases.
 static void _handle_report() {
-    // TODO: include control keys as well.
     // TODO: There's a clever way to check for pressed and released keys at the
     // same time, but I don't feel like figuring it out right now.
     // Check for newly pressed keys.
@@ -289,8 +299,43 @@ static void _handle_report() {
         }
     }
 
+    // Map control keys to their corresponding usage codes to make things
+    // easier for the event processor.
+    _handle_report_control_key_helper(_report.field.modifier.bm.lctrl, _prev_report.field.modifier.bm.lctrl,
+                                      HID_LEFTCTRL, _report.field.modifier.byte);
+    _handle_report_control_key_helper(_report.field.modifier.bm.rctrl, _prev_report.field.modifier.bm.rctrl,
+                                      HID_RIGHTCTRL, _report.field.modifier.byte);
+    _handle_report_control_key_helper(_report.field.modifier.bm.lshift, _prev_report.field.modifier.bm.lshift,
+                                      HID_LEFTSHIFT, _report.field.modifier.byte);
+    _handle_report_control_key_helper(_report.field.modifier.bm.rshift, _prev_report.field.modifier.bm.rshift,
+                                      HID_RIGHTSHIFT, _report.field.modifier.byte);
+    _handle_report_control_key_helper(_report.field.modifier.bm.lalt, _prev_report.field.modifier.bm.lalt, HID_LEFTALT,
+                                      _report.field.modifier.byte);
+    _handle_report_control_key_helper(_report.field.modifier.bm.ralt, _prev_report.field.modifier.bm.ralt, HID_RIGHTALT,
+                                      _report.field.modifier.byte);
+    _handle_report_control_key_helper(_report.field.modifier.bm.lgui, _prev_report.field.modifier.bm.lgui, HID_LEFTMETA,
+                                      _report.field.modifier.byte);
+    _handle_report_control_key_helper(_report.field.modifier.bm.rgui, _prev_report.field.modifier.bm.rgui,
+                                      HID_RIGHTMETA, _report.field.modifier.byte);
+
     // Copy the new report over the previous one.
     memcpy(_prev_report.byte, _report.byte, sizeof(hid_kbd_input_report_t));
+}
+
+static inline void _handle_report_control_key_helper(uint8_t prev_bit, uint8_t curr_bit, uint8_t keycode,
+                                                     uint8_t modifiers) {
+    struct hid_keyboard_event event;
+    event.keycode = keycode;
+    event.modifiers = modifiers;
+    if (curr_bit && !prev_bit) {
+        event.type = HID_KB_EVENT_KEY_PRESS;
+        if (!wtr_queue_is_full(&event_queue))
+            wtr_queue_push(&event_queue, (uint8_t *)(&event));
+    } else if (!curr_bit && prev_bit) {
+        event.type = HID_KB_EVENT_KEY_RELEASE;
+        if (!wtr_queue_is_full(&event_queue))
+            wtr_queue_push(&event_queue, (uint8_t *)(&event));
+    }
 }
 
 // Called to send a request to poll the device for a new report. This is
