@@ -41,7 +41,6 @@ static int32_t _handle_enumeration(struct usb_h_pipe *, struct usb_config_desc *
 static int32_t _handle_disconnection(uint8_t port);
 static void _poll();
 static void _handle_pipe_in(struct usb_h_pipe *pipe);
-static void _handle_ctrl_pipe(struct usb_h_pipe *pipe);
 static void _handle_event_for_locking_keys(struct hid_keyboard_event *event);
 static void _handle_event_for_keystring(struct hid_keyboard_event *event);
 static void _handle_report();
@@ -435,5 +434,3 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
     // Make another request to the endpoint to continue polling.
     wtr_usb_host_schedule_func(&_poll, pipe->interval);
 }
-
-static void _handle_ctrl_pipe(struct usb_h_pipe *pipe) {}
