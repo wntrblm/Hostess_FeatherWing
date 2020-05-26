@@ -106,7 +106,9 @@ int main(void) {
 
     spi_s_sync_enable(&SPI_0);
 
-    gpio_set_pin_level(LED, 1);
+    gpio_set_pin_level(CONNECTED_LED_PIN, 0);
+	
+	gpio_set_pin_level(VUSB_EN_PIN, 1);
 
     while (1) {
         spi_respond(midi_in_queue, keystring_queue, key_event_queue);

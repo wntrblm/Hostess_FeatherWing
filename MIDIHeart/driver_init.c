@@ -243,6 +243,77 @@ void system_init(void)
 {
 	init_mcu();
 
+	// GPIO on PA03
+
+	gpio_set_pin_level(CONNECTED_LED_PIN,
+	                   // <y> Initial level
+	                   // <id> pad_initial_level
+	                   // <false"> Low
+	                   // <true"> High
+	                   true);
+
+	// Set pin direction to output
+	gpio_set_pin_direction(CONNECTED_LED_PIN, GPIO_DIRECTION_OUT);
+
+	gpio_set_pin_function(CONNECTED_LED_PIN, GPIO_PIN_FUNCTION_OFF);
+
+	// GPIO on PA05
+
+	gpio_set_pin_level(READ_LED_PIN,
+	                   // <y> Initial level
+	                   // <id> pad_initial_level
+	                   // <false"> Low
+	                   // <true"> High
+	                   true);
+
+	// Set pin direction to output
+	gpio_set_pin_direction(READ_LED_PIN, GPIO_DIRECTION_OUT);
+
+	gpio_set_pin_function(READ_LED_PIN, GPIO_PIN_FUNCTION_OFF);
+
+	// GPIO on PA07
+
+	gpio_set_pin_level(WRITE_LED_PIN,
+	                   // <y> Initial level
+	                   // <id> pad_initial_level
+	                   // <false"> Low
+	                   // <true"> High
+	                   true);
+
+	// Set pin direction to output
+	gpio_set_pin_direction(WRITE_LED_PIN, GPIO_DIRECTION_OUT);
+
+	gpio_set_pin_function(WRITE_LED_PIN, GPIO_PIN_FUNCTION_OFF);
+
+	// GPIO on PA15
+
+	gpio_set_pin_level(VUSB_EN_PIN,
+	                   // <y> Initial level
+	                   // <id> pad_initial_level
+	                   // <false"> Low
+	                   // <true"> High
+	                   false);
+
+	// Set pin direction to output
+	gpio_set_pin_direction(VUSB_EN_PIN, GPIO_DIRECTION_OUT);
+
+	gpio_set_pin_function(VUSB_EN_PIN, GPIO_PIN_FUNCTION_OFF);
+
+	// GPIO on PA16
+
+	// Set pin direction to input
+	gpio_set_pin_direction(VBUS_FAULT_PIN, GPIO_DIRECTION_IN);
+
+	gpio_set_pin_pull_mode(VBUS_FAULT_PIN,
+	                       // <y> Pull configuration
+	                       // <id> pad_pull_config
+	                       // <GPIO_PULL_OFF"> Off
+	                       // <GPIO_PULL_UP"> Pull-up
+	                       // <GPIO_PULL_DOWN"> Pull-down
+	                       GPIO_PULL_UP);
+
+	gpio_set_pin_function(VBUS_FAULT_PIN, GPIO_PIN_FUNCTION_OFF);
+
 	// GPIO on PA17
 
 	gpio_set_pin_level(LED,

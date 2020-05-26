@@ -715,12 +715,33 @@ drivers:
         configuration:
           usb_gclk_selection: Generic clock generator 0
 pads:
+  CONNECTED_LED_PIN:
+    name: PA03
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PA03
+    mode: Digital output
+    user_label: CONNECTED_LED_PIN
+    configuration:
+      pad_initial_level: High
   PB09:
     name: PB09
     definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PB09
     mode: Digital input
     user_label: PB09
     configuration: null
+  READ_LED_PIN:
+    name: PA05
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PA05
+    mode: Digital output
+    user_label: READ_LED_PIN
+    configuration:
+      pad_initial_level: High
+  WRITE_LED_PIN:
+    name: PA07
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PA07
+    mode: Digital output
+    user_label: WRITE_LED_PIN
+    configuration:
+      pad_initial_level: High
   PA10:
     name: PA10
     definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PA10
@@ -751,6 +772,20 @@ pads:
     mode: Digital output
     user_label: PA12
     configuration: null
+  VUSB_EN_PIN:
+    name: PA15
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PA15
+    mode: Digital output
+    user_label: VUSB_EN_PIN
+    configuration:
+      pad_initial_level: Low
+  VBUS_FAULT_PIN:
+    name: PA16
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PA16
+    mode: Digital input
+    user_label: VBUS_FAULT_PIN
+    configuration:
+      pad_pull_config: Pull-up
   LED:
     name: PA17
     definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::pad::PA17
