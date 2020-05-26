@@ -106,6 +106,7 @@ static uint8_t rep_buf[WTR_USB_REPLY_BUFFER_LEN];
 static struct wtr_usb_host_driver _host_drivers[WTR_USB_MAX_HOST_DRIVERS];
 static size_t _host_driver_count = 0;
 static struct scheduled_func_desc _scheduled_funcs[WTR_USB_MAX_SCHEDULED_FUNCS];
+static uint8_t _devices_connected = 0;
 
 /* Private function forward declarations. */
 
@@ -146,6 +147,10 @@ void wtr_usb_host_schedule_func(wtr_usb_scheduled_func func, uint32_t delay) {
     }
 
     ASSERT(assigned);
+}
+
+bool wtr_usb_host_is_device_connected() {
+	return _devices_connected > 0 ? true : false;
 }
 
 /* Private method implementations */
@@ -248,10 +253,12 @@ static void _handle_enumeration_event(enum enumeration_event event) {
         // Did we find a driver for the device? if so, the driver is responsible for
         // pipe 0, and should free it if its
         // not needed. Otherwise it'll get handled by _cleanup_enumeration.
-        // TODO: De-address the device or otherwise disabled it???
+        // TODO: De-address the device or otherwise disable it???
         if (driver_found)
             _pipe_0 = NULL;
         _cleanup_enumeration();
+		
+		_devices_connected++;
         break;
 
     // Device disconnected. Teardown any enumeration resources and notify the
@@ -266,6 +273,8 @@ static void _handle_enumeration_event(enum enumeration_event event) {
             driver->disconnection_callback(_enum_data.port);
         }
         _cleanup_enumeration();
+		
+		_devices_connected--;
         break;
 
     case ENUM_E_FAILED:

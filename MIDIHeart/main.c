@@ -108,9 +108,16 @@ int main(void) {
 
     gpio_set_pin_level(CONNECTED_LED_PIN, 0);
 	
+	// Enable VBUS power. Should probably be moved somewhere else?
 	gpio_set_pin_level(VUSB_EN_PIN, 1);
 
     while (1) {
+		// Toggle the connected LED state.
+		if (wtr_usb_host_is_device_connected()) {
+			gpio_set_pin_level(CONNECTED_LED_PIN, 1);
+		} else {
+			gpio_set_pin_level(CONNECTED_LED_PIN, 0);	
+		}
         spi_respond(midi_in_queue, keystring_queue, key_event_queue);
     }
 }
