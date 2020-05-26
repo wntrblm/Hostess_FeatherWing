@@ -5,6 +5,10 @@
 #include <atmel_start.h>
 #include <hpl_delay.h>
 
+// Milliseconds
+#define READ_LED_COUNTDOWN_VAL 100
+
+
 enum HostessSpiCommands {
     HTS_SPI_START_REQUEST = 0x81,
     HTS_SPI_REQUEST_MIDI_EVENT = 0x83,
@@ -19,6 +23,7 @@ enum HostessSpiCommands {
 
 static uint8_t spi_out_buf[6];
 static uint8_t spi_in_buf[1];
+static uint32_t read_led_countdown;
 
 void spi_respond(struct wtr_queue *midi_queue, struct wtr_queue *keystring_queue, struct wtr_queue *key_event_queue) {
     int32_t recv_count;
@@ -56,6 +61,7 @@ void spi_respond(struct wtr_queue *midi_queue, struct wtr_queue *keystring_queue
             // response start and response type.
             wtr_queue_pop(midi_queue, spi_out_buf + 2);
             io_write(io, spi_out_buf, 6);
+			read_led_countdown = READ_LED_COUNTDOWN_VAL;
         }
         break;
 
@@ -70,6 +76,7 @@ void spi_respond(struct wtr_queue *midi_queue, struct wtr_queue *keystring_queue
             spi_out_buf[1] = HTS_SPI_RESPONSE_KB_STRING;
             wtr_queue_pop(keystring_queue, spi_out_buf + 2);
             io_write(io, spi_out_buf, 3);
+			read_led_countdown = READ_LED_COUNTDOWN_VAL;
         }
         break;
 
@@ -80,10 +87,12 @@ void spi_respond(struct wtr_queue *midi_queue, struct wtr_queue *keystring_queue
         if (wtr_queue_is_empty(key_event_queue)) {
             spi_out_buf[1] = HTS_SPI_RESPONSE_EMPTY;
             io_write(io, spi_out_buf, 2);
+			gpio_set_pin_level(READ_LED_PIN, 0);
         } else {
             spi_out_buf[1] = HTS_SPI_RESPONSE_KB_EVENT;
             wtr_queue_pop(key_event_queue, spi_out_buf + 2);
             io_write(io, spi_out_buf, 5);
+			read_led_countdown = READ_LED_COUNTDOWN_VAL;
         }
         break;
 
@@ -107,6 +116,8 @@ int main(void) {
     spi_s_sync_enable(&SPI_0);
 
     gpio_set_pin_level(CONNECTED_LED_PIN, 0);
+	gpio_set_pin_level(READ_LED_PIN, 0);
+	gpio_set_pin_level(WRITE_LED_PIN, 0);
 	
 	// Enable VBUS power. Should probably be moved somewhere else?
 	gpio_set_pin_level(VUSB_EN_PIN, 1);
@@ -118,6 +129,16 @@ int main(void) {
 		} else {
 			gpio_set_pin_level(CONNECTED_LED_PIN, 0);	
 		}
+		
+		// Toggle read LED state
+		if(read_led_countdown > 0) {
+			gpio_set_pin_level(READ_LED_PIN, 1);
+			read_led_countdown--; // TODO: probably use systick or some counter to do this.
+		} else {
+			gpio_set_pin_level(READ_LED_PIN, 0);
+		}
+		
+		// Process SPI requests.
         spi_respond(midi_in_queue, keystring_queue, key_event_queue);
     }
 }
