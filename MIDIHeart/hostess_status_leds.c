@@ -5,7 +5,7 @@
 
 
 // Milliseconds
-#define STARTUP_ANIMATION_DURATION 800
+#define STARTUP_ANIMATION_DURATION 700
 
 
 /* Global variables */
@@ -53,8 +53,12 @@ void hostess_pulse_led(enum hostess_status_led led, uint32_t duration) {
 
 
 void hostess_set_led(enum hostess_status_led led, bool state) {
+	// Don't allow setting the LED during the startup animation.
+	if(_animation_timer < STARTUP_ANIMATION_DURATION) return;
     uint8_t pin = _lookup_pin(led);
+	// Don't try to set an LED that doesn't exist.
     if (pin == 0) return;
+
     gpio_set_pin_level(pin, state);
     _led_counter[led] = 0;
 }
@@ -105,7 +109,7 @@ static void _timer_task_callback(const struct timer_task *const timer_task) {
             if(pin == 0) continue;
 			gpio_set_pin_level(pin, false);
         }
-		_animation_timer == STARTUP_ANIMATION_DURATION + 1;
+		_animation_timer = STARTUP_ANIMATION_DURATION + 1;
 	}
 
     // Step through the LEDs and see if they need to be turned off.
