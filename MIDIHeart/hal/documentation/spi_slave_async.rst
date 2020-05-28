@@ -1,5 +1,5 @@
-The SPI Slave Synchronous Driver
-================================
+The SPI Slave Asynchronous Driver
+=================================
 
 The serial peripheral interface (SPI) is a synchronous serial communication
 interface.
@@ -9,13 +9,18 @@ architecture with a single master. The slave device uses the control signal
 and clocks from master for reading and writing. Slave device is selected through
 slave select (SS) line.
 
-When data is read or written through the I/O writing function, the driver keeps
-polling until amount of characters achieved. Also it's possible to perform
-full-duplex read and write through transfer function, which process read and
-write at the same time.
+When data is written through the I/O writing function, the data buffer pointer
+and its size is logged internally by the driver. The data is sent character by
+character in background interrupts. When all data in the buffer is sent,
+callback is invoked to notify that it's done.
 
-When SS detection is considered, a "break on SS detection" option can be enabled
-to make it possible to terminate the read/write/transfer on SS desertion.
+When the driver is enabled, the characters shifted in will be filled to a
+receiving ring-buffer, then the available data can be read out through the I/O
+reading function. On each characters' reception a callback is invoked.
+
+In some cases, the SS deactivation is considered, it's notified through a
+completion callback with status code zero. When status code is lower than zero,
+it indicates error.
 
 Features
 --------
@@ -28,11 +33,17 @@ Features
   * Character size
   * Data order
 * Data transfer: transmission, reception and full-duplex
+* Callbacks management on:
+
+  * Transmission done
+  * Received character
+  * Completion by SS detection or error
 
 Applications
 ------------
 
 * SPI to I2C bridge that bridges SPI commands to I2C interface.
+* SPI WIFI module
 
 Dependencies
 ------------
@@ -47,7 +58,8 @@ N/A
 Limitations
 -----------
 
-N/A
+When received data is not read promptly, the ring-buffer is used out. In this
+case the oldest characters will be overwritten by the newest ones.
 
 Known issues and workarounds
 ----------------------------

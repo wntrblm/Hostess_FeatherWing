@@ -235,9 +235,9 @@ drivers:
           slow_gclk_selection: Generic clock generator 3
   SPI_0:
     user_label: SPI_0
-    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::SERCOM4::driver_config_definition::SPI.Slave::HAL:Driver:SPI.Slave.Sync
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::SERCOM4::driver_config_definition::SPI.Slave::HAL:Driver:SPI.Slave.Async
     functionality: SPI
-    api: HAL:Driver:SPI_Slave_Sync
+    api: HAL:Driver:SPI_Slave_Async
     configuration:
       spi_slave_advanced: false
       spi_slave_arch_addr: 0

@@ -19,7 +19,8 @@ struct timer_descriptor TIMER_0;
 
 struct usart_sync_descriptor TARGET_IO;
 
-struct spi_s_sync_descriptor SPI_0;
+struct spi_s_async_descriptor SPI_0;
+static uint16_t               SPI_0_buf[16];
 
 struct usb_h_desc USB_0_inst;
 
@@ -107,7 +108,7 @@ void SPI_0_CLOCK_init(void)
 void SPI_0_init(void)
 {
 	SPI_0_CLOCK_init();
-	spi_s_sync_init(&SPI_0, SERCOM4);
+	spi_s_async_init(&SPI_0, SERCOM4, (uint8_t *)SPI_0_buf, 32);
 	SPI_0_PORT_init();
 }
 

@@ -156,6 +156,8 @@ static struct usart_configuration _usarts[] = {
 };
 #endif
 
+static struct _spi_async_dev *_sercom4_dev = NULL;
+
 static uint8_t _get_sercom_index(const void *const hw);
 static uint8_t _sercom_get_irq_num(const void *const hw);
 static void    _sercom_init_irq_param(const void *const hw, void *dev);
@@ -576,6 +578,10 @@ static uint8_t _get_sercom_index(const void *const hw)
  */
 static void _sercom_init_irq_param(const void *const hw, void *dev)
 {
+
+	if (hw == SERCOM4) {
+		_sercom4_dev = (struct _spi_async_dev *)dev;
+	}
 }
 
 /**
@@ -2328,6 +2334,37 @@ static inline const struct sercomspi_regs_cfg *_spi_get_regs(const uint32_t hw_a
 	}
 
 	return NULL;
+}
+
+/**
+ *  \brief IRQ handler used
+ *  \param[in, out] p Pointer to SPI device instance.
+ */
+static void _spi_handler(struct _spi_async_dev *dev)
+{
+	void *                      hw = dev->prvt;
+	hri_sercomspi_intflag_reg_t st;
+
+	st = hri_sercomspi_read_INTFLAG_reg(hw);
+	st &= hri_sercomspi_read_INTEN_reg(hw);
+
+	if (st & SERCOM_SPI_INTFLAG_DRE) {
+		dev->callbacks.tx(dev);
+	} else if (st & SERCOM_SPI_INTFLAG_RXC) {
+		dev->callbacks.rx(dev);
+	} else if (st & SERCOM_SPI_INTFLAG_TXC) {
+		hri_sercomspi_clear_INTFLAG_reg(hw, SERCOM_SPI_INTFLAG_TXC);
+		dev->callbacks.complete(dev);
+	} else if (st & SERCOM_SPI_INTFLAG_ERROR) {
+		hri_sercomspi_clear_STATUS_reg(hw, SERCOM_SPI_STATUS_BUFOVF);
+		hri_sercomspi_clear_INTFLAG_reg(hw, SERCOM_SPI_INTFLAG_ERROR);
+		dev->callbacks.err(dev, ERR_OVERFLOW);
+	}
+}
+
+void SERCOM4_Handler(void)
+{
+	_spi_handler(_sercom4_dev);
 }
 
 int32_t _spi_m_sync_init(struct _spi_m_sync_dev *dev, void *const hw)
