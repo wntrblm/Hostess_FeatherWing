@@ -163,7 +163,7 @@ static int32_t _handle_disconnection(uint8_t port) {
     }
 
     if (_out_pipe != NULL) {
-        usb_h_pipe_abort(_in_pipe);
+        usb_h_pipe_abort(_out_pipe);
         usb_h_pipe_free(_out_pipe);
         _out_pipe = NULL;
     }

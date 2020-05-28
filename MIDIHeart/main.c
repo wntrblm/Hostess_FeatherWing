@@ -142,7 +142,7 @@ int main(void) {
     wtr_usb_host_init(&USB_0_inst);
 
     // Enable USB Host Drivers.
-    // wtr_usb_midi_host_init();
+    wtr_usb_midi_host_init();
     wtr_usb_hid_keyboard_init();
 
     // Grabs queues for host drivers.
