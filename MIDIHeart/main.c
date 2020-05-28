@@ -1,12 +1,15 @@
+#include <atmel_start.h>
+#include <hpl_delay.h>
+
 #include "wtr_hid_keyboard_host_driver.h"
 #include "wtr_midi_host_driver.h"
 #include "wtr_queue.h"
 #include "wtr_usb_host.h"
-#include <atmel_start.h>
-#include <hpl_delay.h>
+#include "hostess_status_leds.h"
+
 
 // Milliseconds
-#define READ_LED_COUNTDOWN_VAL 100
+#define LED_PULSE_DURATION 50
 
 
 enum HostessSpiCommands {
@@ -23,7 +26,6 @@ enum HostessSpiCommands {
 
 static uint8_t spi_out_buf[6];
 static uint8_t spi_in_buf[1];
-static uint32_t read_led_countdown;
 
 void spi_respond(struct wtr_queue *midi_queue, struct wtr_queue *keystring_queue, struct wtr_queue *key_event_queue) {
     int32_t recv_count;
@@ -61,7 +63,7 @@ void spi_respond(struct wtr_queue *midi_queue, struct wtr_queue *keystring_queue
             // response start and response type.
             wtr_queue_pop(midi_queue, spi_out_buf + 2);
             io_write(io, spi_out_buf, 6);
-			read_led_countdown = READ_LED_COUNTDOWN_VAL;
+			hostess_pulse_led(HTS_STATUS_LED_READ, LED_PULSE_DURATION);
         }
         break;
 
@@ -76,7 +78,7 @@ void spi_respond(struct wtr_queue *midi_queue, struct wtr_queue *keystring_queue
             spi_out_buf[1] = HTS_SPI_RESPONSE_KB_STRING;
             wtr_queue_pop(keystring_queue, spi_out_buf + 2);
             io_write(io, spi_out_buf, 3);
-			read_led_countdown = READ_LED_COUNTDOWN_VAL;
+			hostess_pulse_led(HTS_STATUS_LED_READ, LED_PULSE_DURATION);
         }
         break;
 
@@ -87,12 +89,11 @@ void spi_respond(struct wtr_queue *midi_queue, struct wtr_queue *keystring_queue
         if (wtr_queue_is_empty(key_event_queue)) {
             spi_out_buf[1] = HTS_SPI_RESPONSE_EMPTY;
             io_write(io, spi_out_buf, 2);
-			gpio_set_pin_level(READ_LED_PIN, 0);
         } else {
             spi_out_buf[1] = HTS_SPI_RESPONSE_KB_EVENT;
             wtr_queue_pop(key_event_queue, spi_out_buf + 2);
             io_write(io, spi_out_buf, 5);
-			read_led_countdown = READ_LED_COUNTDOWN_VAL;
+			hostess_pulse_led(HTS_STATUS_LED_READ, LED_PULSE_DURATION);
         }
         break;
 
@@ -106,36 +107,41 @@ int main(void) {
     /* Initializes MCU, drivers and middleware */
     atmel_start_init();
 
+    // Clear all LEDs TODO: move this into leds_init
+	hostess_set_led(HTS_STATUS_LED_CONNECTION, false);
+	hostess_set_led(HTS_STATUS_LED_READ, false);
+	hostess_set_led(HTS_STATUS_LED_WRITE, false);
+
+    // Start the LED driver
+    hostess_leds_init(&TIMER_0);
+    timer_start(&TIMER_0);
+
+    // Start the USB host
     wtr_usb_host_init(&USB_0_inst);
+
+    // Enable USB Host Drivers.
     // wtr_usb_midi_host_init();
     wtr_usb_hid_keyboard_init();
+
+    // Grabs queues for host drivers.
+    // TODO: move elsewhere?
     struct wtr_queue *midi_in_queue = wtr_usb_midi_get_in_queue();
     struct wtr_queue *keystring_queue = wtr_usb_hid_keyboard_get_keystring_queue();
     struct wtr_queue *key_event_queue = wtr_usb_hid_keyboard_get_event_queue();
 
+    // Start listening for SPI.
     spi_s_sync_enable(&SPI_0);
 
-    gpio_set_pin_level(CONNECTED_LED_PIN, 0);
-	gpio_set_pin_level(READ_LED_PIN, 0);
-	gpio_set_pin_level(WRITE_LED_PIN, 0);
-	
 	// Enable VBUS power. Should probably be moved somewhere else?
 	gpio_set_pin_level(VUSB_EN_PIN, 1);
 
     while (1) {
 		// Toggle the connected LED state.
+        // TODO: Move this to a callback.
 		if (wtr_usb_host_is_device_connected()) {
-			gpio_set_pin_level(CONNECTED_LED_PIN, 1);
+	        hostess_set_led(HTS_STATUS_LED_CONNECTION, true);
 		} else {
-			gpio_set_pin_level(CONNECTED_LED_PIN, 0);	
-		}
-		
-		// Toggle read LED state
-		if(read_led_countdown > 0) {
-			gpio_set_pin_level(READ_LED_PIN, 1);
-			read_led_countdown--; // TODO: probably use systick or some counter to do this.
-		} else {
-			gpio_set_pin_level(READ_LED_PIN, 0);
+	        hostess_set_led(HTS_STATUS_LED_CONNECTION, false);
 		}
 		
 		// Process SPI requests.

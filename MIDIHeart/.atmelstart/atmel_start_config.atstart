@@ -136,18 +136,18 @@ drivers:
       gclk_gen_0_div: 1
       gclk_gen_0_div_sel: false
       gclk_gen_0_oscillator: Digital Frequency Locked Loop (DFLL48M)
-      gclk_gen_1_div: 1
+      gclk_gen_1_div: 48
       gclk_gen_1_div_sel: false
-      gclk_gen_1_oscillator: 8MHz Internal Oscillator (OSC8M)
+      gclk_gen_1_oscillator: Digital Frequency Locked Loop (DFLL48M)
       gclk_gen_2_div: 1
       gclk_gen_2_div_sel: false
-      gclk_gen_2_oscillator: External Crystal Oscillator 0.4-32MHz (XOSC)
+      gclk_gen_2_oscillator: 32kHz External Crystal Oscillator (XOSC32K)
       gclk_gen_3_div: 1
       gclk_gen_3_div_sel: false
       gclk_gen_3_oscillator: 32kHz External Crystal Oscillator (XOSC32K)
-      gclk_gen_4_div: 1
+      gclk_gen_4_div: 32
       gclk_gen_4_div_sel: false
-      gclk_gen_4_oscillator: External Crystal Oscillator 0.4-32MHz (XOSC)
+      gclk_gen_4_oscillator: 32kHz Ultra Low Power Internal Oscillator (OSCULP32K)
       gclk_gen_5_div: 1
       gclk_gen_5_div_sel: false
       gclk_gen_5_oscillator: External Crystal Oscillator 0.4-32MHz (XOSC)
@@ -321,11 +321,11 @@ drivers:
       domain_group:
         nodes:
         - name: RTC
-          input: Generic clock generator 0
+          input: Generic clock generator 1
           external: false
           external_frequency: 0
         configuration:
-          rtc_clk_selection: Generic clock generator 0
+          rtc_clk_selection: Generic clock generator 1
   DMAC:
     user_label: DMAC
     definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::DMAC::driver_config_definition::DMAC::HAL:HPL:DMAC
@@ -633,7 +633,7 @@ drivers:
       enable_dfll48m: true
       enable_fdpll96m: false
       enable_osc32k: false
-      enable_osc8m: true
+      enable_osc8m: false
       enable_osculp32k: true
       enable_xosc: false
       enable_xosc32k: true
@@ -655,7 +655,7 @@ drivers:
       osc32k_arch_startup: 3 Clock Cycles (92us)
       osc32k_arch_wrtlock: false
       osc8m_arch_calib: 0
-      osc8m_arch_enable: true
+      osc8m_arch_enable: false
       osc8m_arch_ondemand: true
       osc8m_arch_overwrite_calibration: false
       osc8m_arch_runstdby: false

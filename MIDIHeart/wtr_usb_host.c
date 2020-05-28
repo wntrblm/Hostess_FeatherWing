@@ -149,9 +149,7 @@ void wtr_usb_host_schedule_func(wtr_usb_scheduled_func func, uint32_t delay) {
     ASSERT(assigned);
 }
 
-bool wtr_usb_host_is_device_connected() {
-	return _devices_connected > 0 ? true : false;
-}
+bool wtr_usb_host_is_device_connected() { return _devices_connected > 0 ? true : false; }
 
 /* Private method implementations */
 
@@ -257,8 +255,8 @@ static void _handle_enumeration_event(enum enumeration_event event) {
         if (driver_found)
             _pipe_0 = NULL;
         _cleanup_enumeration();
-		
-		_devices_connected++;
+
+        _devices_connected++;
         break;
 
     // Device disconnected. Teardown any enumeration resources and notify the
@@ -273,8 +271,8 @@ static void _handle_enumeration_event(enum enumeration_event event) {
             driver->disconnection_callback(_enum_data.port);
         }
         _cleanup_enumeration();
-		
-		_devices_connected--;
+
+        _devices_connected--;
         break;
 
     case ENUM_E_FAILED:

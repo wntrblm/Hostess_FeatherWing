@@ -161,7 +161,7 @@
 
 // <i> Select the clock source for RTC.
 #ifndef CONF_GCLK_RTC_SRC
-#define CONF_GCLK_RTC_SRC GCLK_CLKCTRL_GEN_GCLK0_Val
+#define CONF_GCLK_RTC_SRC GCLK_CLKCTRL_GEN_GCLK1_Val
 #endif
 
 /**
@@ -169,7 +169,7 @@
  * \brief RTC's Clock frequency
  */
 #ifndef CONF_GCLK_RTC_FREQUENCY
-#define CONF_GCLK_RTC_FREQUENCY 48005120
+#define CONF_GCLK_RTC_FREQUENCY 1000106
 #endif
 
 // <y> USB Clock Source

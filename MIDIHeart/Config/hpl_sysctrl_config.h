@@ -46,7 +46,7 @@
 // <i> Indicates whether configuration for OSC8M is enabled or not
 // <id> enable_osc8m
 #ifndef CONF_OSC8M_CONFIG
-#define CONF_OSC8M_CONFIG 1
+#define CONF_OSC8M_CONFIG 0
 #endif
 
 // <h> 8MHz Internal Oscillator (OSC8M) Control
@@ -54,7 +54,7 @@
 // <i> Indicates whether Internal 8 Mhz Oscillator is enabled or not
 // <id> osc8m_arch_enable
 #ifndef CONF_OSC8M_ENABLE
-#define CONF_OSC8M_ENABLE 1
+#define CONF_OSC8M_ENABLE 0
 #endif
 
 // <q> On Demand Control
