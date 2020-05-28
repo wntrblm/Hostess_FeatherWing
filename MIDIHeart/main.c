@@ -107,12 +107,9 @@ int main(void) {
     /* Initializes MCU, drivers and middleware */
     atmel_start_init();
 
-    // Clear all LEDs TODO: move this into leds_init
-	hostess_set_led(HTS_STATUS_LED_CONNECTION, false);
-	hostess_set_led(HTS_STATUS_LED_READ, false);
-	hostess_set_led(HTS_STATUS_LED_WRITE, false);
+    // Start timers
 
-    // Start the LED driver
+    // Start the LED driver.
     hostess_leds_init(&TIMER_0);
     timer_start(&TIMER_0);
 
