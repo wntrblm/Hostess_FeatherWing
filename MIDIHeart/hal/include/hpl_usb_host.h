@@ -266,6 +266,8 @@ struct usb_h_bulk_int_iso_xfer {
 	uint8_t state;
 	/** Last transfer status */
 	int8_t status;
+	/** number of nacks received */
+	uint8_t nacks;
 };
 
 /**
@@ -340,6 +342,8 @@ struct usb_h_pipe {
 	uint8_t zlp : 1;
 	/** Transfer periodic */
 	uint8_t periodic_start : 1;
+	/** Maximum number of nacks before aboring a request. 0 is no limit. */
+	uint8_t nack_limit;
 
 	/** Transfer status */
 	union {

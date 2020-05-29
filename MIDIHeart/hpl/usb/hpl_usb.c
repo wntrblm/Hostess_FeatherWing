@@ -503,6 +503,17 @@ static inline void _usb_h_handle_pipe(struct usb_h_desc *drv, uint32_t isr)
 				_usb_h_abort_transfer(p, USB_H_ERR);
 			}
 		}
+		// This is a NACK, see if the pipe has a nack limit
+		else {
+			// Only do this for bulk endpoints right now.
+			if(p->type == 0x2 && p->nack_limit) {
+				p->x.bii.nacks++;
+				if(p->x.bii.nacks == p->nack_limit) {
+					p->x.general.status = USB_H_TIMEOUT;
+					_usb_h_abort_transfer(p, USB_H_TIMEOUT);
+				}
+			}
+		}
 		return;
 	}
 
@@ -1587,6 +1598,7 @@ static void _usb_h_end_transfer(struct usb_h_pipe *pipe, int32_t code)
 	}
 	pipe->x.general.state  = USB_H_PIPE_S_IDLE;
 	pipe->x.general.status = code;
+	pipe->x.bii.nacks = 0;
 	if (pipe->done) {
 		pipe->done(pipe);
 	}
