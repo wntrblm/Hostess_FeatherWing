@@ -60,7 +60,7 @@ void wtr_usb_hid_keyboard_init() {
     keystring_queue.capacity = KEYSTRING_QUEUE_SIZE;
     wtr_queue_init(&keystring_queue);
 
-    struct wtr_usb_host_driver driver;
+    struct wtr_usb_host_driver driver = {};
     driver.enumeration_callback = &_handle_enumeration;
     driver.disconnection_callback = &_handle_disconnection;
 
@@ -95,8 +95,6 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
             printf("End of descriptors.\r\n");
             break;
         }
-
-        printf("Found descriptor at %p, length: %u, type: %x\r\n", pd, pd[0], pd[1]);
 
         if (usb_desc_type(pd) == USB_DT_INTERFACE) {
             struct usb_iface_desc *iface_desc = USB_STRUCT_PTR(usb_iface_desc, pd);
