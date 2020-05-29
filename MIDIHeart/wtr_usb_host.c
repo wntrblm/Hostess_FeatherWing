@@ -411,6 +411,13 @@ static void _handle_start_of_frame(struct usb_h_desc *drv) {
         _scheduled_funcs[i].func();
         _scheduled_funcs[i].func = NULL;
     }
+
+    // Call any driver start-of-frame callbacks.
+    for (uint32_t i = 0; i < _host_driver_count; i++) {
+        if (_host_drivers[i].sof_callback == NULL)
+            continue;
+        _host_drivers[i].sof_callback();
+    }
 }
 
 /* Handles root hub events from the usb host HAL.
