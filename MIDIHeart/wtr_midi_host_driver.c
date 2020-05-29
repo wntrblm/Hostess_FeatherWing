@@ -4,22 +4,26 @@
 
 /* Constants and macros */
 
-#define USB_MIDI_EVENT_PACKET_SIZE 4
+#define USB_AUDIO_INTERFACE_CLASS 0x01
+#define USB_AUDIO_MIDI_STREAMING_SUBCLASS 0x03
 
 /* Global variables */
 
 static uint8_t _in_queue_data[WTR_USB_MIDI_HOST_BUF_SIZE];
 static struct wtr_queue _in_queue;
-static uint8_t _out_buf[WTR_USB_MIDI_HOST_BUF_SIZE];
+static uint8_t _out_queue_data[WTR_USB_MIDI_HOST_BUF_SIZE];
+static struct wtr_queue _out_queue;
 static uint8_t _in_pipe_buf[64];
 static uint8_t _out_pipe_buf[64];
 static struct usb_h_pipe *_in_pipe;
 static struct usb_h_pipe *_out_pipe;
+static uint32_t _frame_counter = 0;
 
 /* Private function forward declarations */
 
 static int32_t _handle_enumeration(struct usb_h_pipe *, struct usb_config_desc *);
 static int32_t _handle_disconnection(uint8_t port);
+static void _handle_sof();
 static void _handle_pipe_in(struct usb_h_pipe *);
 static void _handle_pipe_out(struct usb_h_pipe *);
 
@@ -31,9 +35,15 @@ void wtr_usb_midi_host_init() {
     _in_queue.capacity = WTR_USB_MIDI_HOST_BUF_SIZE / USB_MIDI_EVENT_PACKET_SIZE;
     wtr_queue_init(&_in_queue);
 
+    _out_queue.data = _out_queue_data;
+    _out_queue.item_size = USB_MIDI_EVENT_PACKET_SIZE;
+    _out_queue.capacity = WTR_USB_MIDI_HOST_BUF_SIZE / USB_MIDI_EVENT_PACKET_SIZE;
+    wtr_queue_init(&_out_queue);
+
     struct wtr_usb_host_driver driver;
     driver.enumeration_callback = &_handle_enumeration;
     driver.disconnection_callback = &_handle_disconnection;
+    driver.sof_callback = &_handle_sof;
 
     wtr_usb_host_register_driver(driver);
 };
@@ -47,6 +57,10 @@ struct wtr_queue *wtr_usb_midi_get_in_queue() {
     return &_in_queue;
 }
 
+struct wtr_queue *wtr_usb_midi_get_out_queue() {
+    return &_out_queue;
+}
+
 /* Private functions */
 
 static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_desc *config_descriptor_header) {
@@ -58,6 +72,9 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
     struct usb_ep_desc *in_ep = NULL;
     struct usb_ep_desc *out_ep = NULL;
 
+    // Have we found the interface descriptor for USB MIDI?
+    bool found_iface = false;
+
     while (1) {
         pd = usb_desc_next(pd);
 
@@ -66,9 +83,17 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
             break;
         }
 
-        printf("Found descriptor at %p, length: %u, type: %x\r\n", pd, pd[0], pd[1]);
+        if (usb_desc_type(pd) == USB_DT_INTERFACE) {
+            struct usb_iface_desc *iface_desc = USB_STRUCT_PTR(usb_iface_desc, pd);
+            if (iface_desc->bInterfaceClass == USB_AUDIO_INTERFACE_CLASS &&
+                iface_desc->bInterfaceSubClass == USB_AUDIO_MIDI_STREAMING_SUBCLASS) {
+                found_iface = true;
+            } else {
+                found_iface = false;
+            }
+        }
 
-        if (usb_desc_type(pd) == USB_DT_ENDPOINT) {
+        if (found_iface && usb_desc_type(pd) == USB_DT_ENDPOINT) {
             struct usb_ep_desc *ep_desc = USB_STRUCT_PTR(usb_ep_desc, pd);
             bool is_in = ep_desc->bEndpointAddress & USB_EP_DIR_IN;
             printf("Found endpoint descriptor. Address: %x, Attributes %x, packet "
@@ -82,6 +107,9 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
                 out_ep = ep_desc;
             }
         }
+
+        if (in_ep != NULL && out_ep != NULL)
+            break;
     }
 
     if (in_ep == NULL || out_ep == NULL) {
@@ -97,6 +125,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
                                    in_ep->bInterval,         // 0x00
                                    pipe_0->speed,            // 0x01, USB_SPEED_FS
                                    true);
+    _in_pipe->nack_limit = 5;
 
     if (_in_pipe == NULL) {
         printf("Failed to allocate IN pipe!\r\n");
@@ -126,15 +155,6 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 
     printf("Pipes allocated!\r\n");
 
-    // Send the first read request to the IN endpoint. The callback will handle
-    // polling.
-    int32_t result = usb_h_bulk_int_iso_xfer(_in_pipe, _in_pipe_buf, _in_pipe->max_pkt_size, false);
-
-    if (result != ERR_NONE) {
-        printf("Failed to start bulk transfer!");
-        goto failed;
-    }
-
     return WTR_USB_HD_STATUS_SUCCESS;
 
 failed:
@@ -143,7 +163,7 @@ failed:
         _in_pipe = NULL;
     }
     if (_out_pipe != NULL) {
-        usb_h_pipe_free(_in_pipe);
+        usb_h_pipe_free(_out_pipe);
         _out_pipe = NULL;
     }
     return WTR_USB_HD_STATUS_FAILED;
@@ -169,8 +189,49 @@ static int32_t _handle_disconnection(uint8_t port) {
     }
 
     wtr_queue_empty(&_in_queue);
+    wtr_queue_empty(&_out_queue);
 
     return ERR_NONE;
+}
+
+static void _poll_in_pipe() {
+    if (_in_pipe == NULL || usb_h_pipe_is_busy(_in_pipe))
+        return;
+
+    _frame_counter++;
+	// TODO: Maybe move this to wtr_usb_host_schedule_func
+    if (_frame_counter >= 100) {
+        _frame_counter = 0;
+        // Enough frames have passed, make a poll request.
+        int32_t result = usb_h_bulk_int_iso_xfer(_in_pipe, _in_pipe_buf, _in_pipe->max_pkt_size, false);
+
+        if (result != ERR_NONE) {
+            printf("Unable to start MIDI poll!, status: %li\r\n", result);
+        }
+    }
+}
+
+static void _write_out_pipe() {
+    if (_out_pipe == NULL || usb_h_pipe_is_busy(_out_pipe))
+        return;
+
+    // Send a request with the latest message from the out buf
+    if (wtr_queue_is_empty(&_out_queue))
+        return;
+
+    wtr_queue_pop(&_out_queue, _out_pipe_buf);
+
+    int32_t result = usb_h_bulk_int_iso_xfer(_out_pipe, _out_pipe_buf, _out_pipe->max_pkt_size, false);
+
+    if (result != ERR_NONE) {
+        printf("Sending MIDI out failed, reason: %li\r\n", result);
+        return;
+    }
+}
+
+static void _handle_sof() {
+    _write_out_pipe();
+    _poll_in_pipe();
 }
 
 static void _handle_pipe_in(struct usb_h_pipe *pipe) {
@@ -178,7 +239,7 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
     struct usb_h_bulk_int_iso_xfer *bii = &pipe->x.bii;
 
     // Pipe closed due to disconnect.
-    if (bii->status == USB_H_ABORT)
+    if (bii->status == USB_H_ABORT || bii->status == USB_H_TIMEOUT)
         return;
 
     if (bii->status != USB_H_OK) {
@@ -211,14 +272,10 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
 
             event_ptr += 4;
         }
-    }
 
-    // Make another request to the endpoint to continue polling.
-    int32_t result = usb_h_bulk_int_iso_xfer(pipe, _in_pipe_buf, pipe->max_pkt_size, false);
-
-    if (result != ERR_NONE) {
-        printf("Failed to start bulk transfer!");
+        printf("Got midi in\r\n");
     }
 }
 
-static void _handle_pipe_out(struct usb_h_pipe *pipe) {}
+static void _handle_pipe_out(struct usb_h_pipe *pipe) {
+}
