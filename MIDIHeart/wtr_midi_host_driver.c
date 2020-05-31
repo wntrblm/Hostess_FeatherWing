@@ -17,12 +17,13 @@ static uint8_t _in_pipe_buf[64];
 static uint8_t _out_pipe_buf[64];
 static struct usb_h_pipe *_in_pipe;
 static struct usb_h_pipe *_out_pipe;
-static uint32_t _frame_counter = 0;
 
 /* Private function forward declarations */
 
 static int32_t _handle_enumeration(struct usb_h_pipe *, struct usb_config_desc *);
 static int32_t _handle_disconnection(uint8_t port);
+static void _poll_in_pipe();
+static void _write_out_pipe();
 static void _handle_sof();
 static void _handle_pipe_in(struct usb_h_pipe *);
 static void _handle_pipe_out(struct usb_h_pipe *);
@@ -117,23 +118,6 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
         return WTR_USB_HD_STATUS_UNSUPPORTED;
     }
 
-    _in_pipe = usb_h_pipe_allocate(pipe_0->hcd,
-                                   pipe_0->dev,              // 0x01
-                                   in_ep->bEndpointAddress,  // 0x81 for test device
-                                   in_ep->wMaxPacketSize,    // 0x40 for test device
-                                   in_ep->bmAttributes,      // 0x02 (Bulk transfer)
-                                   in_ep->bInterval,         // 0x00
-                                   pipe_0->speed,            // 0x01, USB_SPEED_FS
-                                   true);
-    _in_pipe->nack_limit = 5;
-
-    if (_in_pipe == NULL) {
-        printf("Failed to allocate IN pipe!\r\n");
-        goto failed;
-    }
-
-    usb_h_pipe_register_callback(_in_pipe, _handle_pipe_in);
-
     _out_pipe = usb_h_pipe_allocate(pipe_0->hcd,
                                     pipe_0->dev,               // 0x01
                                     out_ep->bEndpointAddress,  // 0x02 for test device.
@@ -150,10 +134,34 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 
     usb_h_pipe_register_callback(_out_pipe, _handle_pipe_out);
 
+    _in_pipe = usb_h_pipe_allocate(pipe_0->hcd,
+                                   pipe_0->dev,              // 0x01
+                                   in_ep->bEndpointAddress,  // 0x81 for test device
+                                   in_ep->wMaxPacketSize,    // 0x40 for test device
+                                   in_ep->bmAttributes,      // 0x02 (Bulk transfer)
+                                   in_ep->bInterval,         // 0x00
+                                   pipe_0->speed,            // 0x01, USB_SPEED_FS
+                                   true);
+
+    // Set a nack limit on the in pipe to prevent it from starving other drivers.
+    _in_pipe->nack_limit = 100;
+
+    if (_in_pipe == NULL) {
+        printf("Failed to allocate IN pipe!\r\n");
+        goto failed;
+    }
+
+    usb_h_pipe_register_callback(_in_pipe, _handle_pipe_in);
+
+
     // This driver doesn't need pipe 0, so free it.
     usb_h_pipe_free(pipe_0);
 
     printf("Pipes allocated!\r\n");
+
+    // Schedule the first poll of the IN pipe. It will handle scheduling
+    // itself again.
+    wtr_usb_host_schedule_func(&_poll_in_pipe, _in_pipe->interval);
 
     return WTR_USB_HD_STATUS_SUCCESS;
 
@@ -195,19 +203,13 @@ static int32_t _handle_disconnection(uint8_t port) {
 }
 
 static void _poll_in_pipe() {
-    if (_in_pipe == NULL || usb_h_pipe_is_busy(_in_pipe))
+    if (_in_pipe == NULL)
         return;
 
-    _frame_counter++;
-	// TODO: Maybe move this to wtr_usb_host_schedule_func
-    if (_frame_counter >= 100) {
-        _frame_counter = 0;
-        // Enough frames have passed, make a poll request.
-        int32_t result = usb_h_bulk_int_iso_xfer(_in_pipe, _in_pipe_buf, _in_pipe->max_pkt_size, false);
+    int32_t result = usb_h_bulk_int_iso_xfer(_in_pipe, _in_pipe_buf, _in_pipe->max_pkt_size, false);
 
-        if (result != ERR_NONE) {
-            printf("Unable to start MIDI poll!, status: %li\r\n", result);
-        }
+    if (result != ERR_NONE) {
+        printf("Unable to start MIDI poll!, status: %li\r\n", result);
     }
 }
 
@@ -231,7 +233,6 @@ static void _write_out_pipe() {
 
 static void _handle_sof() {
     _write_out_pipe();
-    _poll_in_pipe();
 }
 
 static void _handle_pipe_in(struct usb_h_pipe *pipe) {
@@ -239,8 +240,12 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
     struct usb_h_bulk_int_iso_xfer *bii = &pipe->x.bii;
 
     // Pipe closed due to disconnect.
-    if (bii->status == USB_H_ABORT || bii->status == USB_H_TIMEOUT)
+    if (bii->status == USB_H_ABORT)
         return;
+
+    // Request timed out. This is normal, just schedule another request.
+    if (bii->status == USB_H_TIMEOUT)
+        return wtr_usb_host_schedule_func(&_poll_in_pipe, pipe->interval);
 
     if (bii->status != USB_H_OK) {
         printf("Error in MIDI IN. State: %u, Status: %i, Count: %lu, Size: %lu\r\n", bii->state, bii->status,
@@ -272,9 +277,11 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
 
             event_ptr += 4;
         }
-
-        printf("Got midi in\r\n");
     }
+
+    // Schedule the next poll. Always do one more frame than the
+    // interval to prevent starving the out pipe.
+    wtr_usb_host_schedule_func(&_poll_in_pipe, pipe->interval);
 }
 
 static void _handle_pipe_out(struct usb_h_pipe *pipe) {

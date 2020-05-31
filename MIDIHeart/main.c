@@ -77,7 +77,9 @@ void process_command(enum hostess_spi_command command, struct io_descriptor *io)
             else if (spi_state == HOSTESS_SPI_STATE_COMMAND_DATA) {
                 // We got a full event, write it to the MIDI out queue
                 uint8_t *midi_event = spi_in_buf + 1;
-                wtr_queue_push(midi_out_queue, midi_event);
+				
+				if(!wtr_queue_is_full(midi_out_queue))
+					wtr_queue_push(midi_out_queue, midi_event);
 
                 // And send along the ack response
                 spi_out_buf[0] = HTS_SPI_START_RESPONSE;

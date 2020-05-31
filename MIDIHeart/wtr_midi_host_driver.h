@@ -4,7 +4,7 @@
 #include "wtr_usb_defs.h"
 
 #ifndef WTR_USB_MIDI_HOST_BUF_SIZE
-#define WTR_USB_MIDI_HOST_BUF_SIZE 256
+#define WTR_USB_MIDI_HOST_BUF_SIZE 512
 #endif
 #define USB_MIDI_EVENT_PACKET_SIZE 4
 
