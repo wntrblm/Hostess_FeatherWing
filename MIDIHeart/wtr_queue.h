@@ -4,6 +4,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+enum wtr_queue_overflow_behavior {
+    WTR_QUEUE_OVF_DROP_NEWEST,
+    WTR_QUEUE_OVF_DROP_OLDEST,
+};
+
 struct wtr_queue {
     // The underlying data
     uint8_t *data;
@@ -11,6 +16,8 @@ struct wtr_queue {
     size_t item_size;
     // Total capacity. Should be in number of *items*, not number of *bytes*.
     size_t capacity;
+    // The behavior when an overflow condition occurs.
+    enum wtr_queue_overflow_behavior overflow_behavior;
     // The count of stored items.
     size_t _count;
     // Internal data.

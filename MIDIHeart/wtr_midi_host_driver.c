@@ -34,11 +34,13 @@ void wtr_usb_midi_host_init() {
     _in_queue.data = _in_queue_data;
     _in_queue.item_size = USB_MIDI_EVENT_PACKET_SIZE;
     _in_queue.capacity = WTR_USB_MIDI_HOST_BUF_SIZE / USB_MIDI_EVENT_PACKET_SIZE;
+    _in_queue.overflow_behavior = WTR_QUEUE_OVF_DROP_OLDEST;
     wtr_queue_init(&_in_queue);
 
     _out_queue.data = _out_queue_data;
     _out_queue.item_size = USB_MIDI_EVENT_PACKET_SIZE;
     _out_queue.capacity = WTR_USB_MIDI_HOST_BUF_SIZE / USB_MIDI_EVENT_PACKET_SIZE;
+    _out_queue.overflow_behavior = WTR_QUEUE_OVF_DROP_OLDEST;
     wtr_queue_init(&_out_queue);
 
     struct wtr_usb_host_driver driver;
@@ -266,12 +268,6 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
             // Invalid MIDI event packet, we've hit the end of the data.
             if (event_ptr[0] == 0)
                 break;
-
-            if (wtr_queue_is_full(&_in_queue)) {
-                // TODO: Record this error somewhere.
-                printf("MIDI in queue is full!\r\n");
-                break;
-            }
 
             wtr_queue_push(&_in_queue, event_ptr);
 
