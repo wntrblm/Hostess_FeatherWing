@@ -155,7 +155,6 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 
     usb_h_pipe_register_callback(_in_pipe, _handle_pipe_in);
 
-
     // This driver doesn't need pipe 0, so free it.
     usb_h_pipe_free(pipe_0);
 
@@ -233,9 +232,7 @@ static void _write_out_pipe() {
     }
 }
 
-static void _handle_sof() {
-    _write_out_pipe();
-}
+static void _handle_sof() { _write_out_pipe(); }
 
 static void _handle_pipe_in(struct usb_h_pipe *pipe) {
     // bii is the bulk/iso/interupt transfer status.
@@ -280,5 +277,4 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
     wtr_usb_host_schedule_func(&_poll_in_pipe, pipe->interval);
 }
 
-static void _handle_pipe_out(struct usb_h_pipe *pipe) {
-}
+static void _handle_pipe_out(struct usb_h_pipe *pipe) {}

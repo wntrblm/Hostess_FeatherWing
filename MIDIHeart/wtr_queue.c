@@ -25,10 +25,10 @@ inline static void _check_offsets(volatile struct wtr_queue *q) {
 void wtr_queue_push(volatile struct wtr_queue *q, uint8_t *i) {
     bool overflow = q->_count == q->capacity;
 
-    if(overflow && q->overflow_behavior == WTR_QUEUE_OVF_DROP_NEWEST)
+    if (overflow && q->overflow_behavior == WTR_QUEUE_OVF_DROP_NEWEST)
         return;
 
-    if(overflow && q->overflow_behavior == WTR_QUEUE_OVF_DROP_OLDEST) {
+    if (overflow && q->overflow_behavior == WTR_QUEUE_OVF_DROP_OLDEST) {
         // Advance the read head one to drop the oldest item.
         q->_read_offset = (q->_read_offset + 1) % q->capacity;
         // This will be incremented again below, keeping the count the same.
