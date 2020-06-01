@@ -119,20 +119,28 @@ void process_command(enum hostess_spi_command command, struct io_descriptor *io)
             break;
 
         default:
-            printf("Unknown SPI request: 0x%02x\r\n", command);
+            //printf("Unknown SPI request: 0x%02x\r\n", command);
             break;
     }
 };
 
 
+volatile hal_atomic_t spi_rx_atomic;
+
+
 void spi_rx_callback(const struct spi_s_async_descriptor *const spi_desc) {
+    // Disable interrupts while responding to SPI requests. An
+    // interrupt during this could cause SPI data to drop.
     int32_t recv_count;
     struct io_descriptor *io;
+
+    atomic_enter_critical(&spi_rx_atomic);
+
     spi_s_async_get_io_descriptor(&SPI_0, &io);
 
     recv_count = io_read(io, spi_in_buf + spi_in_buf_head, 1);
 
-    if (recv_count == 0) return;
+    if (recv_count == 0) goto leave;
 		
 	switch(spi_state) {
 		case HOSTESS_SPI_STATE_IDLE:
@@ -170,6 +178,10 @@ void spi_rx_callback(const struct spi_s_async_descriptor *const spi_desc) {
 		default:
 			break; 
 	}
+
+
+leave:
+    atomic_leave_critical(&spi_rx_atomic);
 	
 	return;
 }

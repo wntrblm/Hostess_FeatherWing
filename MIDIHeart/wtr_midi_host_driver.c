@@ -1,4 +1,5 @@
 #include "wtr_midi_host_driver.h"
+#include "wtr_midi_debug.h"
 #include "wtr_usb_host.h"
 #include <stdio.h>
 
@@ -146,7 +147,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
                                    true);
 
     // Set a nack limit on the in pipe to prevent it from starving other drivers.
-    _in_pipe->nack_limit = 100;
+    _in_pipe->nack_limit = 100000;
 
     if (_in_pipe == NULL) {
         printf("Failed to allocate IN pipe!\r\n");
@@ -232,7 +233,18 @@ static void _write_out_pipe() {
     }
 }
 
-static void _handle_sof() { _write_out_pipe(); }
+static void _handle_sof() {
+    static uint32_t frame_counter;
+
+    _write_out_pipe();
+
+    frame_counter++;
+
+    if (frame_counter > 5000) {
+        midi_debug_check_stuck_notes();
+        frame_counter = 0;
+    }
+}
 
 static void _handle_pipe_in(struct usb_h_pipe *pipe) {
     // bii is the bulk/iso/interupt transfer status.
@@ -244,7 +256,7 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
 
     // Request timed out. This is normal, just schedule another request.
     if (bii->status == USB_H_TIMEOUT)
-        return wtr_usb_host_schedule_func(&_poll_in_pipe, pipe->interval);
+        return _poll_in_pipe();
 
     if (bii->status != USB_H_OK) {
         printf("Error in MIDI IN. State: %u, Status: %i, Count: %lu, Size: %lu\r\n", bii->state, bii->status,
@@ -266,15 +278,19 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
             if (event_ptr[0] == 0)
                 break;
 
+            midi_debug_on_msg(event_ptr);
             wtr_queue_push(&_in_queue, event_ptr);
 
             event_ptr += 4;
         }
     }
 
-    // Schedule the next poll. Always do one more frame than the
-    // interval to prevent starving the out pipe.
-    wtr_usb_host_schedule_func(&_poll_in_pipe, pipe->interval);
+    // Schedule the next poll.
+    if (pipe->interval == 0) {
+        _poll_in_pipe();
+    } else {
+        wtr_usb_host_schedule_func(&_poll_in_pipe, pipe->interval);
+    }
 }
 
 static void _handle_pipe_out(struct usb_h_pipe *pipe) {}

@@ -917,6 +917,12 @@
     <Compile Include="wtr_hid_keyboard_host_driver.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="wtr_midi_debug.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="wtr_midi_debug.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="wtr_midi_host_driver.c">
       <SubType>compile</SubType>
     </Compile>
