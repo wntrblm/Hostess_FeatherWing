@@ -7,11 +7,18 @@
 // Milliseconds
 #define STARTUP_ANIMATION_DURATION 700
 
+#define LED_FLASH_PERIOD 100
+
+
+enum led_state {
+    LED_STATE_DEFAULT,
+    LED_STATE_FLASHING,
+};
 
 /* Global variables */
 
-
 static uint32_t _led_counter[3];
+static enum led_state _led_state[3];
 static struct timer_task _task;
 static uint32_t _animation_timer = 0;
 
@@ -45,6 +52,7 @@ void hostess_leds_init(struct timer_descriptor *timer) {
 
 
 void hostess_pulse_led(enum hostess_status_led led, uint32_t duration) {
+    if(_led_state[led] == LED_STATE_FLASHING) return;
     uint8_t pin = _lookup_pin(led);
     if (pin == 0) return;
     gpio_set_pin_level(pin, true);
@@ -53,8 +61,10 @@ void hostess_pulse_led(enum hostess_status_led led, uint32_t duration) {
 
 
 void hostess_set_led(enum hostess_status_led led, bool state) {
-	// Don't allow setting the LED during the startup animation.
+	// Don't allow setting the LED during the startup animation or while it's flashing
 	if(_animation_timer < STARTUP_ANIMATION_DURATION) return;
+    if(_led_state[led] == LED_STATE_FLASHING) return;
+
     uint8_t pin = _lookup_pin(led);
 	// Don't try to set an LED that doesn't exist.
     if (pin == 0) return;
@@ -63,9 +73,25 @@ void hostess_set_led(enum hostess_status_led led, bool state) {
     _led_counter[led] = 0;
 }
 
+void hostess_flash_led(enum hostess_status_led led) {
+    uint8_t pin = _lookup_pin(led);
+    if (pin == 0) return;
+    _led_state[led] = LED_STATE_FLASHING;
+    _led_counter[led] = LED_FLASH_PERIOD;
+    gpio_set_pin_level(pin, true);
+}
+
+void hostess_stop_flashing_led(enum hostess_status_led led) {
+    uint8_t pin = _lookup_pin(led);
+    if (pin == 0) return;
+    if(_led_state[led] != LED_STATE_FLASHING) return;
+    _led_state[led] = LED_STATE_DEFAULT;
+    _led_counter[led] = 0;
+    gpio_set_pin_level(pin, false);
+}
+
 
 /* Private functions */
-
 
 inline static uint8_t _lookup_pin(enum hostess_status_led led) {
     switch(led)
@@ -118,7 +144,12 @@ static void _timer_task_callback(const struct timer_task *const timer_task) {
         if(pin == 0 || _led_counter[i] == 0) continue;
         _led_counter[i]--;
         if(_led_counter[i] == 0) {
-            gpio_set_pin_level(pin, false);
+            if(_led_state[i] == LED_STATE_DEFAULT) {
+                gpio_set_pin_level(pin, false);
+            } else {
+                gpio_set_pin_level(pin, !gpio_get_pin_level(pin));
+                _led_counter[i] = LED_FLASH_PERIOD;
+            }
         }
     }
 }

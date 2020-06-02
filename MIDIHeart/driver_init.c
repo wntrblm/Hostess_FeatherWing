@@ -24,6 +24,26 @@ static uint16_t               SPI_0_buf[16];
 
 struct usb_h_desc USB_0_inst;
 
+void EXTERNAL_IRQ_0_init(void)
+{
+	_gclk_enable_channel(EIC_GCLK_ID, CONF_GCLK_EIC_SRC);
+
+	// Set pin direction to input
+	gpio_set_pin_direction(VBUS_FAULT_PIN, GPIO_DIRECTION_IN);
+
+	gpio_set_pin_pull_mode(VBUS_FAULT_PIN,
+	                       // <y> Pull configuration
+	                       // <id> pad_pull_config
+	                       // <GPIO_PULL_OFF"> Off
+	                       // <GPIO_PULL_UP"> Pull-up
+	                       // <GPIO_PULL_DOWN"> Pull-down
+	                       GPIO_PULL_UP);
+
+	gpio_set_pin_function(VBUS_FAULT_PIN, PINMUX_PA16A_EIC_EXTINT0);
+
+	ext_irq_init();
+}
+
 void TARGET_IO_PORT_init(void)
 {
 
@@ -300,21 +320,6 @@ void system_init(void)
 
 	gpio_set_pin_function(VUSB_EN_PIN, GPIO_PIN_FUNCTION_OFF);
 
-	// GPIO on PA16
-
-	// Set pin direction to input
-	gpio_set_pin_direction(VBUS_FAULT_PIN, GPIO_DIRECTION_IN);
-
-	gpio_set_pin_pull_mode(VBUS_FAULT_PIN,
-	                       // <y> Pull configuration
-	                       // <id> pad_pull_config
-	                       // <GPIO_PULL_OFF"> Off
-	                       // <GPIO_PULL_UP"> Pull-up
-	                       // <GPIO_PULL_DOWN"> Pull-down
-	                       GPIO_PULL_UP);
-
-	gpio_set_pin_function(VBUS_FAULT_PIN, GPIO_PIN_FUNCTION_OFF);
-
 	// GPIO on PA17
 
 	gpio_set_pin_level(LED,
@@ -328,6 +333,8 @@ void system_init(void)
 	gpio_set_pin_direction(LED, GPIO_DIRECTION_OUT);
 
 	gpio_set_pin_function(LED, GPIO_PIN_FUNCTION_OFF);
+
+	EXTERNAL_IRQ_0_init();
 
 	TARGET_IO_init();
 

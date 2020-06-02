@@ -14,3 +14,5 @@ enum hostess_status_led {
 void hostess_leds_init(struct timer_descriptor *timer);
 void hostess_pulse_led(enum hostess_status_led led, uint32_t duration);
 void hostess_set_led(enum hostess_status_led led, bool state);
+void hostess_flash_led(enum hostess_status_led led);
+void hostess_stop_flashing_led(enum hostess_status_led);

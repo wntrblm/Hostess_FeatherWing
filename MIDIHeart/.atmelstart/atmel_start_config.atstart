@@ -2,16 +2,16 @@ format_version: '2'
 name: MIDIHeart
 versions:
   api: '1.0'
-  backend: 1.7.303
+  backend: 1.7.360
   commit: 1e07622763d149970fd8808a8f12ff3b1e84e0d7
   content: unknown
   content_pack_name: unknown
   format: '2'
   frontend: 1.7.303
-  packs_version_avr8: 1.0.1410
+  packs_version_avr8: 1.0.1415
   packs_version_qtouch: unknown
-  packs_version_sam: 1.0.1554
-  version_backend: 1.7.303
+  packs_version_sam: 1.0.1622
+  version_backend: 1.7.360
   version_frontend: ''
 board:
   identifier: CustomBoard
@@ -71,6 +71,112 @@ middlewares:
     dependencies:
       Target IO: TARGET_IO
 drivers:
+  EXTERNAL_IRQ_0:
+    user_label: EXTERNAL_IRQ_0
+    definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::EIC::driver_config_definition::Default::HAL:Driver:Ext.IRQ
+    functionality: External_IRQ
+    api: HAL:Driver:Ext_IRQ
+    configuration:
+      eic_arch_enable_irq_setting0: true
+      eic_arch_enable_irq_setting1: false
+      eic_arch_enable_irq_setting10: false
+      eic_arch_enable_irq_setting11: false
+      eic_arch_enable_irq_setting12: false
+      eic_arch_enable_irq_setting13: false
+      eic_arch_enable_irq_setting14: false
+      eic_arch_enable_irq_setting15: false
+      eic_arch_enable_irq_setting2: false
+      eic_arch_enable_irq_setting3: false
+      eic_arch_enable_irq_setting4: false
+      eic_arch_enable_irq_setting5: false
+      eic_arch_enable_irq_setting6: false
+      eic_arch_enable_irq_setting7: false
+      eic_arch_enable_irq_setting8: false
+      eic_arch_enable_irq_setting9: false
+      eic_arch_extinteo0: false
+      eic_arch_extinteo1: false
+      eic_arch_extinteo10: false
+      eic_arch_extinteo11: false
+      eic_arch_extinteo12: false
+      eic_arch_extinteo13: false
+      eic_arch_extinteo14: false
+      eic_arch_extinteo15: false
+      eic_arch_extinteo2: false
+      eic_arch_extinteo3: false
+      eic_arch_extinteo4: false
+      eic_arch_extinteo5: false
+      eic_arch_extinteo6: false
+      eic_arch_extinteo7: false
+      eic_arch_extinteo8: false
+      eic_arch_extinteo9: false
+      eic_arch_filten0: false
+      eic_arch_filten1: false
+      eic_arch_filten10: false
+      eic_arch_filten11: false
+      eic_arch_filten12: false
+      eic_arch_filten13: false
+      eic_arch_filten14: false
+      eic_arch_filten15: false
+      eic_arch_filten2: false
+      eic_arch_filten3: false
+      eic_arch_filten4: false
+      eic_arch_filten5: false
+      eic_arch_filten6: false
+      eic_arch_filten7: false
+      eic_arch_filten8: false
+      eic_arch_filten9: false
+      eic_arch_nmifilten: false
+      eic_arch_nmisense: No detection
+      eic_arch_sense0: Falling-edge detection
+      eic_arch_sense1: No detection
+      eic_arch_sense10: No detection
+      eic_arch_sense11: No detection
+      eic_arch_sense12: No detection
+      eic_arch_sense13: No detection
+      eic_arch_sense14: No detection
+      eic_arch_sense15: No detection
+      eic_arch_sense2: No detection
+      eic_arch_sense3: No detection
+      eic_arch_sense4: No detection
+      eic_arch_sense5: No detection
+      eic_arch_sense6: No detection
+      eic_arch_sense7: No detection
+      eic_arch_sense8: No detection
+      eic_arch_sense9: No detection
+      eic_arch_wakeupen0: false
+      eic_arch_wakeupen1: false
+      eic_arch_wakeupen10: false
+      eic_arch_wakeupen11: false
+      eic_arch_wakeupen12: false
+      eic_arch_wakeupen13: false
+      eic_arch_wakeupen14: false
+      eic_arch_wakeupen15: false
+      eic_arch_wakeupen2: false
+      eic_arch_wakeupen3: false
+      eic_arch_wakeupen4: false
+      eic_arch_wakeupen5: false
+      eic_arch_wakeupen6: false
+      eic_arch_wakeupen7: false
+      eic_arch_wakeupen8: false
+      eic_arch_wakeupen9: false
+    optional_signals:
+    - identifier: EXTERNAL_IRQ_0:EXTINT/0
+      pad: PA16
+      mode: Enabled
+      configuration: null
+      definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::optional_signal_definition::EIC.EXTINT.0
+      name: EIC/EXTINT/0
+      label: EXTINT/0
+    variant: null
+    clocks:
+      domain_group:
+        nodes:
+        - name: EIC
+          input: Generic clock generator 0
+          external: false
+          external_frequency: 0
+        configuration:
+          eic_gclk_selection: Generic clock generator 0
   GCLK:
     user_label: GCLK
     definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::GCLK::driver_config_definition::GCLK::HAL:HPL:GCLK

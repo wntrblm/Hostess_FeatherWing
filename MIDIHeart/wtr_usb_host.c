@@ -98,6 +98,8 @@ struct scheduled_func_desc {
 
 /* Global variables used across this module. */
 
+static wtr_usb_vbus_control_func _vbus_control_func;
+static wtr_usb_connection_callback _connection_callback;
 static struct usb_h_desc *_drv;
 static struct usb_h_pipe *_pipe_0;
 static struct enumeration_data _enum_data;
@@ -128,6 +130,16 @@ void wtr_usb_host_init(struct usb_h_desc *drv) {
     usb_h_enable(drv);
     _drv = drv;
 }
+
+void wtr_usb_host_vbus_fault_handler() {
+    if (_vbus_control_func == NULL)
+        return;
+    _vbus_control_func(false);
+}
+
+void wtr_usb_host_set_vbus_control_func(wtr_usb_vbus_control_func func) { _vbus_control_func = func; }
+
+void wtr_usb_host_set_connection_callback(wtr_usb_connection_callback func) { _connection_callback = func; }
 
 void wtr_usb_host_register_driver(struct wtr_usb_host_driver driver) {
     ASSERT(_host_driver_count != WTR_USB_MAX_HOST_DRIVERS);
@@ -245,6 +257,7 @@ static void _handle_enumeration_event(enum enumeration_event event) {
                 driver_found = true;
                 break;
             }
+
             // TODO: check for WTR_USB_HD_STATUS_FAILED, make sure ctrl_pipe gets cleaned up.
         }
 
@@ -257,6 +270,8 @@ static void _handle_enumeration_event(enum enumeration_event event) {
         _cleanup_enumeration();
 
         _devices_connected++;
+        if (_connection_callback != NULL)
+            _connection_callback(_enum_data.port, true);
         break;
 
     // Device disconnected. Teardown any enumeration resources and notify the
@@ -273,6 +288,8 @@ static void _handle_enumeration_event(enum enumeration_event event) {
         _cleanup_enumeration();
 
         _devices_connected--;
+        if (_connection_callback != NULL)
+            _connection_callback(_enum_data.port, false);
         break;
 
     case ENUM_E_FAILED:
@@ -446,7 +463,8 @@ static void _handle_root_hub_change_event(struct usb_h_desc *drv, uint8_t port, 
     // Not implemented yet.
     case PORT_SUSPEND:
         return;
-    // Not implemented by the root hub, but may be implemented in downstream hubs
+    // Not implemented by the root hub, instead, the vbus handler deals with this.
+    // However, this event but may be implemented in downstream hubs.
     case PORT_OVER_CURRENT:
         printf("Port overcurrent. Port: %u\r\n", port);
         return;

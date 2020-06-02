@@ -233,9 +233,7 @@ static void _write_out_pipe() {
     }
 }
 
-static void _handle_sof() {
-    _write_out_pipe();
-}
+static void _handle_sof() { _write_out_pipe(); }
 
 static void _handle_pipe_in(struct usb_h_pipe *pipe) {
     // bii is the bulk/iso/interupt transfer status.
@@ -275,7 +273,7 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
         }
     }
 
-    // Schedule the next poll.
+// Schedule the next poll.
 reschedule:
     if (pipe->interval == 0) {
         _poll_in_pipe();

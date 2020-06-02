@@ -186,6 +186,27 @@ leave:
 	return;
 }
 
+
+static hal_atomic_t vbus_fault_atomic;
+
+void vbus_fault_interrupt() {
+    atomic_enter_critical(&vbus_fault_atomic);
+    wtr_usb_host_vbus_fault_handler();
+    atomic_leave_critical(&vbus_fault_atomic);
+}
+
+void vbus_control(bool enable) {
+    gpio_set_pin_level(VUSB_EN_PIN, enable);
+	if(!enable) {
+		hostess_flash_led(HTS_STATUS_LED_CONNECTION);
+	}
+}
+
+void usb_connection_callback(uint8_t port, bool state) {
+    hostess_set_led(HTS_STATUS_LED_CONNECTION, state);
+}
+
+
 int main(void) {
     /* Initializes MCU, drivers and middleware */
     atmel_start_init();
@@ -197,11 +218,19 @@ int main(void) {
     timer_start(&TIMER_0);
 
     // Start the USB host
+    wtr_usb_host_set_vbus_control_func(&vbus_control);
+    wtr_usb_host_set_connection_callback(&usb_connection_callback);
     wtr_usb_host_init(&USB_0_inst);
 
     // Enable USB Host Drivers.
     wtr_usb_midi_host_init();
     //wtr_usb_hid_keyboard_init();
+	
+	// Setup the vbus fault interrupt.
+	ext_irq_register(VBUS_FAULT_PIN, &vbus_fault_interrupt);
+
+	// Enable VBUS power.
+	vbus_control(true);
 
     // Grabs queues for host drivers.
     // TODO: move elsewhere?
@@ -215,16 +244,6 @@ int main(void) {
 	spi_s_async_register_callback(&SPI_0, SPI_S_CB_TX, (FUNC_PTR)spi_complete_callback);
     spi_s_async_enable(&SPI_0);
 
-	// Enable VBUS power. Should probably be moved somewhere else?
-	gpio_set_pin_level(VUSB_EN_PIN, 1);
-
     while (1) {
-		// Toggle the connected LED state.
-        // TODO: Move this to a callback.
-		if (wtr_usb_host_is_device_connected()) {
-	        hostess_set_led(HTS_STATUS_LED_CONNECTION, true);
-		} else {
-	        hostess_set_led(HTS_STATUS_LED_CONNECTION, false);
-		}
     }
 }
