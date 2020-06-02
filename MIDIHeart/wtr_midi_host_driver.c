@@ -234,16 +234,7 @@ static void _write_out_pipe() {
 }
 
 static void _handle_sof() {
-    static uint32_t frame_counter;
-
     _write_out_pipe();
-
-    frame_counter++;
-
-    if (frame_counter > 5000) {
-        midi_debug_check_stuck_notes();
-        frame_counter = 0;
-    }
 }
 
 static void _handle_pipe_in(struct usb_h_pipe *pipe) {
@@ -256,7 +247,7 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
 
     // Request timed out. This is normal, just schedule another request.
     if (bii->status == USB_H_TIMEOUT)
-        return _poll_in_pipe();
+        goto reschedule;
 
     if (bii->status != USB_H_OK) {
         printf("Error in MIDI IN. State: %u, Status: %i, Count: %lu, Size: %lu\r\n", bii->state, bii->status,
@@ -270,7 +261,7 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
 
         if (bii->count % USB_MIDI_EVENT_PACKET_SIZE != 0) {
             printf("Data is not a valid midi packet!\r\n");
-            return;
+            goto reschedule;
         }
 
         while (event_ptr < bii->data + bii->count) {
@@ -278,7 +269,6 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
             if (event_ptr[0] == 0)
                 break;
 
-            midi_debug_on_msg(event_ptr);
             wtr_queue_push(&_in_queue, event_ptr);
 
             event_ptr += 4;
@@ -286,6 +276,7 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
     }
 
     // Schedule the next poll.
+reschedule:
     if (pipe->interval == 0) {
         _poll_in_pipe();
     } else {
