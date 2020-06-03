@@ -50,7 +50,7 @@ void spi_rx_callback(const struct spi_s_async_descriptor *const spi_desc) {
 
 
 int main(void) {
-    /* Initializes MCU, drivers and middleware */
+    // Initializes MCU, drivers and middleware
     atmel_start_init();
 
     // Start the LED driver.
