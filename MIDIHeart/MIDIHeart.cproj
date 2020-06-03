@@ -745,6 +745,12 @@
     <Compile Include="hal\utils\src\utils_syscalls.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="hostess_command_processor.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hostess_command_processor.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="hostess_status_leds.c">
       <SubType>compile</SubType>
     </Compile>
