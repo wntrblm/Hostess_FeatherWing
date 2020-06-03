@@ -15,9 +15,9 @@ static hal_atomic_t vbus_fault_atomic;
 
 void vbus_control(bool enable) {
     gpio_set_pin_level(VUSB_EN_PIN, enable);
-	if(!enable) {
-		hostess_flash_led(HTS_STATUS_LED_CONNECTION);
-	}
+    if(!enable) {
+        hostess_flash_led(HTS_STATUS_LED_CONNECTION);
+    }
 }
 
 void vbus_fault_interrupt() {
@@ -64,12 +64,12 @@ int main(void) {
     // Enable USB Host Drivers.
     wtr_usb_midi_host_init();
     //wtr_usb_hid_keyboard_init();
-	
-	// Setup the vbus fault interrupt.
-	ext_irq_register(VBUS_FAULT_PIN, &vbus_fault_interrupt);
+    
+    // Setup the vbus fault interrupt.
+    ext_irq_register(VBUS_FAULT_PIN, &vbus_fault_interrupt);
 
-	// Enable VBUS power.
-	vbus_control(true);
+    // Enable VBUS power.
+    vbus_control(true);
 
     // Grab event queues from host drivers and wire them up to
     // the hostess command processor.

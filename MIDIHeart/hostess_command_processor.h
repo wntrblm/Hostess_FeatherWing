@@ -8,8 +8,8 @@
 
 
 enum hostess_command_result_state {
-	HOSTESS_CMD_RESULT_DONE,
-	HOSTESS_CMD_RESULT_NEEDS_DATA,
+    HOSTESS_CMD_RESULT_DONE,
+    HOSTESS_CMD_RESULT_NEEDS_DATA,
 };
 
 struct hostess_command_result {

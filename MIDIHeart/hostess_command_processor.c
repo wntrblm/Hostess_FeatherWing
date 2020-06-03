@@ -79,13 +79,13 @@ struct hostess_command_result hostess_process_command(enum hostess_command comma
             }
             // We got a full event, write it to the MIDI out queue
             else {
-				wtr_queue_push(_midi_out_queue, in_buf);
+                wtr_queue_push(_midi_out_queue, in_buf);
 
                 // And send along the ack response
                 _response_out_buf[0] = HOSTESS_CMD_START_RESPONSE;
                 _response_out_buf[1] = HOSTESS_CMD_RESPONSE_WRITE_MIDI_EVENT;
                 io_write(io, _response_out_buf, 2);
-				hostess_pulse_led(HTS_STATUS_LED_WRITE, LED_PULSE_DURATION);
+                hostess_pulse_led(HTS_STATUS_LED_WRITE, LED_PULSE_DURATION);
             }
             break;
 
@@ -134,42 +134,42 @@ void hostess_parse_byte_stream(struct io_descriptor *io) {
     int32_t recv_count = io_read(io, _stream_parser_data.in_buf + _stream_parser_data.in_buf_offset, 1);
 
     if (recv_count == 0) return;
-		
-	switch(_stream_parser_data.state) {
-		case PARSER_STATE_IDLE:
-			if(_stream_parser_data.in_buf[0] == HOSTESS_CMD_START_REQUEST) {
-				_stream_parser_data.state = PARSER_STATE_COMMAND_START;
-			}
-			break;
-			
-		case PARSER_STATE_COMMAND_START:
-            _stream_parser_data.command_byte = _stream_parser_data.in_buf[0];
-			struct hostess_command_result result = hostess_process_command(_stream_parser_data.command_byte, NULL, 0, io);
+        
+    switch(_stream_parser_data.state) {
+        case PARSER_STATE_IDLE:
+            if(_stream_parser_data.in_buf[0] == HOSTESS_CMD_START_REQUEST) {
+                _stream_parser_data.state = PARSER_STATE_COMMAND_START;
+            }
+            break;
             
-			// If the command has data, the move our buf write head ahead one
-			// so we can keep the command in buf[0] and add the data after.
+        case PARSER_STATE_COMMAND_START:
+            _stream_parser_data.command_byte = _stream_parser_data.in_buf[0];
+            struct hostess_command_result result = hostess_process_command(_stream_parser_data.command_byte, NULL, 0, io);
+            
+            // If the command has data, the move our buf write head ahead one
+            // so we can keep the command in buf[0] and add the data after.
             if(result.state == HOSTESS_CMD_RESULT_NEEDS_DATA) {
                 _stream_parser_data.in_buf_offset = 0;
                 _stream_parser_data.command_data_bytes = result.remaining_bytes;
                 _stream_parser_data.state = PARSER_STATE_COMMAND_BYTES;
             }
-			// If there's no data for the command, set the state back to IDLE.
-			else {
-				_stream_parser_data.state = PARSER_STATE_IDLE;
-			}
-			break;
+            // If there's no data for the command, set the state back to IDLE.
+            else {
+                _stream_parser_data.state = PARSER_STATE_IDLE;
+            }
+            break;
 
-		case PARSER_STATE_COMMAND_BYTES:
+        case PARSER_STATE_COMMAND_BYTES:
             _stream_parser_data.in_buf_offset++;
 
             if(_stream_parser_data.in_buf_offset == _stream_parser_data.command_data_bytes) {
                 hostess_process_command(_stream_parser_data.command_byte, _stream_parser_data.in_buf, _stream_parser_data.command_data_bytes, io);
                 _stream_parser_data.state = PARSER_STATE_IDLE;
-				_stream_parser_data.in_buf_offset = 0;
+                _stream_parser_data.in_buf_offset = 0;
             }
-			break;
+            break;
 
-		default:
-			break; 
-	}
+        default:
+            break; 
+    }
 };

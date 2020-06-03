@@ -45,8 +45,8 @@ void hostess_leds_init(struct timer_descriptor *timer) {
     _animation_timer = 0;
 
     _task.interval = 1;
-	_task.cb = &_timer_task_callback;
-	_task.mode = TIMER_TASK_REPEAT;
+    _task.cb = &_timer_task_callback;
+    _task.mode = TIMER_TASK_REPEAT;
 
     timer_add_task(timer, &_task);
 }
@@ -62,11 +62,11 @@ void hostess_pulse_led(enum hostess_status_led led, uint32_t duration) {
 
 
 void hostess_set_led(enum hostess_status_led led, bool state) {
-	// Don't allow setting the LED while it's flashing
+    // Don't allow setting the LED while it's flashing
     if(_led_state[led] == LED_STATE_FLASHING) return;
 
     uint8_t pin = _lookup_pin(led);
-	// Don't try to set an LED that doesn't exist.
+    // Don't try to set an LED that doesn't exist.
     if (pin == 0) return;
 
     gpio_set_pin_level(pin, state);
@@ -129,17 +129,17 @@ static void _timer_task_callback(const struct timer_task *const timer_task) {
             }
         }
     }
-	else if(_animation_timer == STARTUP_ANIMATION_DURATION) {
-		// Turn the LEDs we turned on off.
+    else if(_animation_timer == STARTUP_ANIMATION_DURATION) {
+        // Turn the LEDs we turned on off.
         for(size_t i = 0; i < HTS_STATUS_LED_COUNT; i++) {
             if(_led_state[i] != LED_STATE_ANIMATING) continue;
             _led_state[i] = LED_STATE_DEFAULT;
             uint8_t pin = _lookup_pin(i);
             if(pin == 0) continue;
-			gpio_set_pin_level(pin, false);
+            gpio_set_pin_level(pin, false);
         }
-		_animation_timer = STARTUP_ANIMATION_DURATION + 1;
-	}
+        _animation_timer = STARTUP_ANIMATION_DURATION + 1;
+    }
 
     // Step through the LEDs and see if they need to be turned off.
     for(size_t i = 0; i < HTS_STATUS_LED_COUNT; i++) {
