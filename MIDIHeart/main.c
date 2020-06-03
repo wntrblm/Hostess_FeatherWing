@@ -13,17 +13,17 @@
 
 static hal_atomic_t vbus_fault_atomic;
 
-void vbus_fault_interrupt() {
-    atomic_enter_critical(&vbus_fault_atomic);
-    wtr_usb_host_vbus_fault_handler();
-    atomic_leave_critical(&vbus_fault_atomic);
-}
-
 void vbus_control(bool enable) {
     gpio_set_pin_level(VUSB_EN_PIN, enable);
 	if(!enable) {
 		hostess_flash_led(HTS_STATUS_LED_CONNECTION);
 	}
+}
+
+void vbus_fault_interrupt() {
+    atomic_enter_critical(&vbus_fault_atomic);
+    vbus_control(false);
+    atomic_leave_critical(&vbus_fault_atomic);
 }
 
 void usb_connection_callback(uint8_t port, bool state) {
@@ -58,7 +58,6 @@ int main(void) {
     timer_start(&TIMER_0);
 
     // Start the USB host
-    wtr_usb_host_set_vbus_control_func(&vbus_control);
     wtr_usb_host_set_connection_callback(&usb_connection_callback);
     wtr_usb_host_init(&USB_0_inst);
 

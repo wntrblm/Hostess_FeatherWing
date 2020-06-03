@@ -98,7 +98,6 @@ struct scheduled_func_desc {
 
 /* Global variables used across this module. */
 
-static wtr_usb_vbus_control_func _vbus_control_func;
 static wtr_usb_connection_callback _connection_callback;
 static struct usb_h_desc *_drv;
 static struct usb_h_pipe *_pipe_0;
@@ -130,14 +129,6 @@ void wtr_usb_host_init(struct usb_h_desc *drv) {
     usb_h_enable(drv);
     _drv = drv;
 }
-
-void wtr_usb_host_vbus_fault_handler() {
-    if (_vbus_control_func == NULL)
-        return;
-    _vbus_control_func(false);
-}
-
-void wtr_usb_host_set_vbus_control_func(wtr_usb_vbus_control_func func) { _vbus_control_func = func; }
 
 void wtr_usb_host_set_connection_callback(wtr_usb_connection_callback func) { _connection_callback = func; }
 
