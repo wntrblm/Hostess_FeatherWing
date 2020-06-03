@@ -11,6 +11,7 @@
 
 
 enum led_state {
+    LED_STATE_ANIMATING,
     LED_STATE_DEFAULT,
     LED_STATE_FLASHING,
 };
@@ -61,8 +62,7 @@ void hostess_pulse_led(enum hostess_status_led led, uint32_t duration) {
 
 
 void hostess_set_led(enum hostess_status_led led, bool state) {
-	// Don't allow setting the LED during the startup animation or while it's flashing
-	if(_animation_timer < STARTUP_ANIMATION_DURATION) return;
+	// Don't allow setting the LED while it's flashing
     if(_led_state[led] == LED_STATE_FLASHING) return;
 
     uint8_t pin = _lookup_pin(led);
@@ -71,6 +71,7 @@ void hostess_set_led(enum hostess_status_led led, bool state) {
 
     gpio_set_pin_level(pin, state);
     _led_counter[led] = 0;
+    _led_state[led] = LED_STATE_DEFAULT;
 }
 
 void hostess_flash_led(enum hostess_status_led led) {
@@ -131,6 +132,8 @@ static void _timer_task_callback(const struct timer_task *const timer_task) {
 	else if(_animation_timer == STARTUP_ANIMATION_DURATION) {
 		// Turn the LEDs we turned on off.
         for(size_t i = 0; i < HTS_STATUS_LED_COUNT; i++) {
+            if(_led_state[i] != LED_STATE_ANIMATING) continue;
+            _led_state[i] = LED_STATE_DEFAULT;
             uint8_t pin = _lookup_pin(i);
             if(pin == 0) continue;
 			gpio_set_pin_level(pin, false);
