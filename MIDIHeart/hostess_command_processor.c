@@ -55,7 +55,7 @@ struct hostess_command_result hostess_process_command(enum hostess_command comma
             // Start response start byte and type
             _response_out_buf[0] = HOSTESS_CMD_START_RESPONSE;
 
-            if (wtr_queue_is_empty(_midi_in_queue)) {
+            if (_midi_in_queue == NULL || wtr_queue_is_empty(_midi_in_queue)) {
                 _response_out_buf[1] = HOSTESS_CMD_RESPONSE_EMPTY;
                 io_write(io, _response_out_buf, 2);
             } else {
@@ -79,7 +79,7 @@ struct hostess_command_result hostess_process_command(enum hostess_command comma
             }
             // We got a full event, write it to the MIDI out queue
             else {
-                wtr_queue_push(_midi_out_queue, in_buf);
+                if(_midi_in_queue != NULL) wtr_queue_push(_midi_out_queue, in_buf);
 
                 // And send along the ack response
                 _response_out_buf[0] = HOSTESS_CMD_START_RESPONSE;
@@ -93,7 +93,7 @@ struct hostess_command_result hostess_process_command(enum hostess_command comma
             // Start response start byte and type
             _response_out_buf[0] = HOSTESS_CMD_START_RESPONSE;
 
-            if (wtr_queue_is_empty(_keystring_queue)) {
+            if (_keystring_queue == NULL || wtr_queue_is_empty(_keystring_queue)) {
                 _response_out_buf[1] = HOSTESS_CMD_RESPONSE_EMPTY;
                 io_write(io, _response_out_buf, 2);
             } else {
@@ -108,7 +108,7 @@ struct hostess_command_result hostess_process_command(enum hostess_command comma
             // Start response start byte and type
             _response_out_buf[0] = HOSTESS_CMD_START_RESPONSE;
 
-            if (wtr_queue_is_empty(_key_event_queue)) {
+            if (_key_event_queue == NULL || wtr_queue_is_empty(_key_event_queue)) {
                 _response_out_buf[1] = HOSTESS_CMD_RESPONSE_EMPTY;
                 io_write(io, _response_out_buf, 2);
             } else {
