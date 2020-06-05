@@ -3,6 +3,7 @@
 
 #include "wtr_hid_keyboard_host_driver.h"
 #include "wtr_midi_host_driver.h"
+#include "wtr_ps4_host_driver.h"
 #include "wtr_queue.h"
 #include "wtr_usb_host.h"
 #include "hostess_status_leds.h"
@@ -39,7 +40,8 @@ void spi_rx_callback(const struct spi_s_async_descriptor *const spi_desc) {
     struct io_descriptor *io;
 
     // Disable interrupts while responding to SPI requests. An
-    // interrupt during this could cause SPI data to drop.
+    // interrupt during this could cause SPI data to drop,
+    // it also prevents contention on the event queues.
     atomic_enter_critical(&spi_rx_atomic);
     spi_s_async_get_io_descriptor(&SPI_0, &io);
 
@@ -64,6 +66,7 @@ int main(void) {
     // Enable USB Host Drivers.
     wtr_usb_midi_host_init();
     //wtr_usb_hid_keyboard_init();
+    //wtr_ps4_driver_init();
     
     // Setup the vbus fault interrupt.
     ext_irq_register(VBUS_FAULT_PIN, &vbus_fault_interrupt);

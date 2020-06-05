@@ -961,6 +961,12 @@
     <Compile Include="wtr_midi_host_driver.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="wtr_ps4_host_driver.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="wtr_ps4_host_driver.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="wtr_queue.c">
       <SubType>compile</SubType>
     </Compile>
