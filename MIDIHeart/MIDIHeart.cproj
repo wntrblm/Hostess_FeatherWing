@@ -203,7 +203,7 @@
           <AcmeProjectActionInfo Action="File" Source="config/hpl_sysctrl_config.h" IsConfig="true" Hash="6aLz+FYnKbquymdj/jVJ2g" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_systick_config.h" IsConfig="true" Hash="tlT3lNDKWFe82MiGWfQzcA" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_usb_config.h" IsConfig="true" Hash="CKkhnYXmYrrGb2u9dKLggw" />
-          <AcmeProjectActionInfo Action="File" Source="config/peripheral_clk_config.h" IsConfig="true" Hash="7D7VpCWRQCHQsPxZOgJKhA" />
+          <AcmeProjectActionInfo Action="File" Source="config/peripheral_clk_config.h" IsConfig="true" Hash="/HSwBq6BTHtkfiu9mi38Cg" />
           <AcmeProjectActionInfo Action="File" Source="config/usbh_config.h" IsConfig="true" Hash="fot8p0caxPF3KS4ZOJfL8A" />
           <AcmeProjectActionInfo Action="File" Source="config/stdio_redirect_config.h" IsConfig="true" Hash="CKmkBk12sfr7mb+HRQBuzg" />
         </AcmeActionInfos>
@@ -947,12 +947,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="wtr_hid_keyboard_host_driver.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="wtr_midi_debug.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="wtr_midi_debug.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="wtr_midi_host_driver.c">

@@ -7,7 +7,7 @@ versions:
   content: unknown
   content_pack_name: unknown
   format: '2'
-  frontend: 1.7.303
+  frontend: 1.7.360
   packs_version_avr8: 1.0.1415
   packs_version_qtouch: unknown
   packs_version_sam: 1.0.1622
@@ -384,12 +384,12 @@ drivers:
           external: false
           external_frequency: 0
         - name: Slow
-          input: Generic clock generator 3
+          input: Generic clock generator 1
           external: false
           external_frequency: 0
         configuration:
           core_gclk_selection: Generic clock generator 0
-          slow_gclk_selection: Generic clock generator 3
+          slow_gclk_selection: Generic clock generator 1
   DELAY_0:
     user_label: DELAY_0
     definition: Atmel:SAMD21_Drivers:0.0.1::SAMD21G18A-MF::SysTick::driver_config_definition::Delay::HAL:Driver:Delay

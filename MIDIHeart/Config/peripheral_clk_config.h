@@ -153,7 +153,7 @@
 
 // <i> Select the slow clock source.
 #ifndef CONF_GCLK_SERCOM4_SLOW_SRC
-#define CONF_GCLK_SERCOM4_SLOW_SRC GCLK_CLKCTRL_GEN_GCLK3_Val
+#define CONF_GCLK_SERCOM4_SLOW_SRC GCLK_CLKCTRL_GEN_GCLK1_Val
 #endif
 
 /**
@@ -169,7 +169,7 @@
  * \brief SERCOM4's Slow Clock frequency
  */
 #ifndef CONF_GCLK_SERCOM4_SLOW_FREQUENCY
-#define CONF_GCLK_SERCOM4_SLOW_FREQUENCY 32768
+#define CONF_GCLK_SERCOM4_SLOW_FREQUENCY 1000106
 #endif
 
 // <y> RTC Clock Source
