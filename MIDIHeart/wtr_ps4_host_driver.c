@@ -3,6 +3,7 @@
 #include "usb_protocol_hid.h"
 #include "wtr_usb_host.h"
 #include "wtr_utils.h"
+#include "wtr_debug.h"
 #include <stdio.h>
 
 /* Constants */
@@ -67,7 +68,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
         pd = usb_desc_next(pd);
 
         if (pd == eod) {
-            printf("End of descriptors.\r\n");
+            wtr_debug_printf("End of descriptors.\r\n");
             break;
         }
 
@@ -83,7 +84,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
         if (found_iface && usb_desc_type(pd) == USB_DT_ENDPOINT) {
             struct usb_ep_desc *ep = USB_STRUCT_PTR(usb_ep_desc, pd);
             bool is_in = ep->bEndpointAddress & USB_EP_DIR_IN;
-            printf("Found endpoint descriptor. Address: %x, Attributes %x, packet "
+            wtr_debug_printf("Found endpoint descriptor. Address: %x, Attributes %x, packet "
                    "size: %u, interval: %u\r\n",
                    ep->bEndpointAddress, ep->bmAttributes, ep->wMaxPacketSize, ep->bInterval);
             if (is_in) {
@@ -95,7 +96,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
     }
 
     if (in_ep == NULL || out_ep == NULL) {
-        printf("Could not find the IN endpoint.\r\n");
+        wtr_debug_printf("Could not find the IN endpoint.\r\n");
         return WTR_USB_HD_STATUS_UNSUPPORTED;
     }
 
@@ -103,7 +104,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
                                    in_ep->bmAttributes, in_ep->bInterval, pipe_0->speed, true);
 
     if (_in_pipe == NULL) {
-        printf("Failed to allocate IN pipe!\r\n");
+        wtr_debug_printf("Failed to allocate IN pipe!\r\n");
         goto failed;
     }
 
@@ -112,13 +113,13 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
     _out_pipe = usb_h_pipe_allocate(pipe_0->hcd, pipe_0->dev, out_ep->bEndpointAddress, out_ep->wMaxPacketSize,
                                     out_ep->bmAttributes, out_ep->bInterval, pipe_0->speed, true);
     if (_out_pipe == NULL) {
-        printf("Failed to allocate OUT pipe!\r\n");
+        wtr_debug_printf("Failed to allocate OUT pipe!\r\n");
         goto failed;
     }
 
     usb_h_pipe_register_callback(_out_pipe, _handle_pipe_out);
 
-    printf("Pipes allocated!\r\n");
+    wtr_debug_printf("Pipes allocated!\r\n");
 
     // Enable HID reports by setting Idle to 0.
     // TODO: Should probably have a callback to check if this succeeds. Probably easier
@@ -184,7 +185,7 @@ static void _poll() {
     int32_t result = usb_h_bulk_int_iso_xfer(_in_pipe, _in_pipe_buf, _in_pipe->max_pkt_size, false);
 
     if (result != ERR_NONE) {
-        printf("Failed to start IN transfer!");
+        wtr_debug_printf("Failed to start IN transfer!");
     }
 }
 
@@ -197,7 +198,7 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
         return;
 
     if (bii->status != USB_H_OK) {
-        printf("Error in PS4 IN. State: %u, Status: %i, Count: %lu, Size: "
+        wtr_debug_printf("Error in PS4 IN. State: %u, Status: %i, Count: %lu, Size: "
                "%lu\r\n",
                bii->state, bii->status, bii->count, bii->size);
         return;

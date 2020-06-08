@@ -1,6 +1,6 @@
 #include "wtr_midi_host_driver.h"
-#include "wtr_midi_debug.h"
 #include "wtr_usb_host.h"
+#include "wtr_debug.h"
 #include <stdio.h>
 
 /* Constants and macros */
@@ -83,7 +83,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
         pd = usb_desc_next(pd);
 
         if (pd == eod) {
-            printf("End of descriptors.\r\n");
+            wtr_debug_printf("End of descriptors.\r\n");
             break;
         }
 
@@ -100,7 +100,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
         if (found_iface && usb_desc_type(pd) == USB_DT_ENDPOINT) {
             struct usb_ep_desc *ep_desc = USB_STRUCT_PTR(usb_ep_desc, pd);
             bool is_in = ep_desc->bEndpointAddress & USB_EP_DIR_IN;
-            printf("Found endpoint descriptor. Address: %x, Attributes %x, packet "
+            wtr_debug_printf("Found endpoint descriptor. Address: %x, Attributes %x, packet "
                    "size: %u, interval: %u, input?: %u\r\n",
                    ep_desc->bEndpointAddress, ep_desc->bmAttributes, ep_desc->wMaxPacketSize, ep_desc->bInterval,
                    is_in);
@@ -117,7 +117,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
     }
 
     if (in_ep == NULL || out_ep == NULL) {
-        printf("Could not find and IN and OUT endpoints.\r\n");
+        wtr_debug_printf("Could not find and IN and OUT endpoints.\r\n");
         return WTR_USB_HD_STATUS_UNSUPPORTED;
     }
 
@@ -131,7 +131,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
                                     true);
 
     if (_out_pipe == NULL) {
-        printf("Failed to allocate OUT pipe!\r\n");
+        wtr_debug_printf("Failed to allocate OUT pipe!\r\n");
         goto failed;
     }
 
@@ -150,7 +150,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
     _in_pipe->nack_limit = 100000;
 
     if (_in_pipe == NULL) {
-        printf("Failed to allocate IN pipe!\r\n");
+        wtr_debug_printf("Failed to allocate IN pipe!\r\n");
         goto failed;
     }
 
@@ -159,7 +159,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
     // This driver doesn't need pipe 0, so free it.
     usb_h_pipe_free(pipe_0);
 
-    printf("Pipes allocated!\r\n");
+    wtr_debug_printf("Pipes allocated!\r\n");
 
     // Schedule the first poll of the IN pipe. It will handle scheduling
     // itself again.
@@ -180,7 +180,7 @@ failed:
 }
 
 static int32_t _handle_disconnection(uint8_t port) {
-    printf("MIDI disconnection called.\r\n");
+    wtr_debug_printf("MIDI disconnection called.\r\n");
 
     // TODO: Check the port and make sure its this device.
     // requires the usb host driver to track address -> port
@@ -211,7 +211,7 @@ static void _poll_in_pipe() {
     int32_t result = usb_h_bulk_int_iso_xfer(_in_pipe, _in_pipe_buf, _in_pipe->max_pkt_size, false);
 
     if (result != ERR_NONE) {
-        printf("Unable to start MIDI poll!, status: %li\r\n", result);
+        wtr_debug_printf("Unable to start MIDI poll!, status: %li\r\n", result);
     }
 }
 
@@ -228,7 +228,7 @@ static void _write_out_pipe() {
     int32_t result = usb_h_bulk_int_iso_xfer(_out_pipe, _out_pipe_buf, _out_pipe->max_pkt_size, false);
 
     if (result != ERR_NONE) {
-        printf("Sending MIDI out failed, reason: %li\r\n", result);
+        wtr_debug_printf("Sending MIDI out failed, reason: %li\r\n", result);
         return;
     }
 }
@@ -248,7 +248,7 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
         goto reschedule;
 
     if (bii->status != USB_H_OK) {
-        printf("Error in MIDI IN. State: %u, Status: %i, Count: %lu, Size: %lu\r\n", bii->state, bii->status,
+        wtr_debug_printf("Error in MIDI IN. State: %u, Status: %i, Count: %lu, Size: %lu\r\n", bii->state, bii->status,
                bii->count, bii->size);
         return;
     }
@@ -258,7 +258,7 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
         uint8_t *event_ptr = bii->data;
 
         if (bii->count % USB_MIDI_EVENT_PACKET_SIZE != 0) {
-            printf("Data is not a valid midi packet!\r\n");
+            wtr_debug_printf("Data is not a valid midi packet!\r\n");
             goto reschedule;
         }
 

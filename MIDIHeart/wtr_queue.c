@@ -9,18 +9,6 @@ void wtr_queue_init(struct wtr_queue *q) {
     q->_count = 0;
 }
 
-inline static void _check_offsets(volatile struct wtr_queue *q) {
-#ifdef DEBUG
-    // queue is empty/full.
-    if (q->_count == q->capacity && q->_read_offset == q->_write_offset)
-        return;
-    size_t tmp = q->_write_offset;
-    // deal with wrap-around
-    if (tmp < q->_read_offset)
-        tmp += q->capacity;
-    ASSERT(tmp - q->_read_offset == q->_count);
-#endif
-}
 
 void wtr_queue_push(volatile struct wtr_queue *q, uint8_t *i) {
     bool overflow = q->_count == q->capacity;
@@ -41,7 +29,6 @@ void wtr_queue_push(volatile struct wtr_queue *q, uint8_t *i) {
 
     q->_write_offset = (q->_write_offset + 1) % q->capacity;
     q->_count++;
-    _check_offsets(q);
 }
 
 void wtr_queue_pop(volatile struct wtr_queue *q, uint8_t *i) {
@@ -51,7 +38,14 @@ void wtr_queue_pop(volatile struct wtr_queue *q, uint8_t *i) {
 
     q->_read_offset = (q->_read_offset + 1) % q->capacity;
     q->_count--;
-    _check_offsets(q);
+}
+
+
+uint8_t * wtr_queue_pop_zerocopy(volatile struct wtr_queue *q) {
+    uint8_t *read_ptr = q->data + (q->item_size * q->_read_offset);
+    q->_read_offset = (q->_read_offset + 1) % q->capacity;
+    q->_count--;
+    return read_ptr;
 }
 
 void wtr_queue_empty(volatile struct wtr_queue *q) {

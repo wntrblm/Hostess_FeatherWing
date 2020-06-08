@@ -42,18 +42,25 @@ void spi_rx_callback(const struct spi_s_async_descriptor *const spi_desc) {
     // Disable interrupts while responding to SPI requests. An
     // interrupt during this could cause SPI data to drop,
     // it also prevents contention on the event queues.
-    atomic_enter_critical(&spi_rx_atomic);
+    //atomic_enter_critical(&spi_rx_atomic);
     spi_s_async_get_io_descriptor(&SPI_0, &io);
 
     hostess_parse_byte_stream(io);
 
-    atomic_leave_critical(&spi_rx_atomic);
+    //atomic_leave_critical(&spi_rx_atomic);
 }
 
 
 int main(void) {
     // Initializes MCU, drivers and middleware
     atmel_start_init();
+
+    // Set interrupt priorities. Setting the SPI interrupt
+    // a lower priority prevents it from starving the USB
+    // task.
+    NVIC_SetPriority(SERCOM4_IRQn, 0);
+    NVIC_SetPriority(USB_IRQn, 1);
+    NVIC_SetPriority(RTC_IRQn, 3);
 
     // Start the LED driver.
     hostess_leds_init(&TIMER_0);

@@ -4,6 +4,7 @@
 #include "usb_protocol.h"
 #include "wtr_usb_defs.h"
 #include "wtr_usb_requests.h"
+#include "wtr_debug.h"
 #include <stdio.h>
 
 /* Macros */
@@ -12,7 +13,7 @@
     do {                                                                                                               \
         int f_status = (x);                                                                                            \
         if (f_status != ERR_NONE) {                                                                                    \
-            printf("Enumeration error: %s returned %d at %s:%d\r\n", #x, f_status, __FILE__, __LINE__);                \
+            wtr_debug_printf("Enumeration error: %s returned %d at %s:%d\r\n", #x, f_status, __FILE__, __LINE__);      \
             _enum_data.failure_reason = f_status;                                                                      \
             return _handle_enumeration_event(ENUM_E_FAILED);                                                           \
         }                                                                                                              \
@@ -168,14 +169,14 @@ static void _handle_enumeration_event(enum enumeration_event event) {
     switch (event) {
     // Device newly connected, reset its port.
     case ENUM_E_CONNECTED:
-        printf("Port %u connection.\r\n", _enum_data.port);
+        wtr_debug_printf("Port %u connection.\r\n", _enum_data.port);
         usb_h_rh_reset(_drv, _enum_data.port);
         _enum_data.state = ENUM_S_ATTACHED;
         break;
 
     // Device reset, open a pipe to it and get its configuration descriptor.
     case ENUM_E_RESET:
-        printf("Port %u reset.\r\n", _enum_data.port);
+        wtr_debug_printf("Port %u reset.\r\n", _enum_data.port);
         ENUM_CHECKED(_create_pipe_0());
 
         // The device needs some time to reset, so schedule a continuation.
@@ -192,7 +193,7 @@ static void _handle_enumeration_event(enum enumeration_event event) {
     // in
     // a helper function.
     case ENUM_E_DEV_DESC_READ:
-        printf("Got device descriptor reply\r\n");
+        wtr_debug_printf("Got device descriptor reply\r\n");
         ENUM_CHECKED(_handle_device_descriptor());
         _enum_data.state = ENUM_S_DEFAULT;
         break;
@@ -201,7 +202,7 @@ static void _handle_enumeration_event(enum enumeration_event event) {
     // Reconfigure the pipe to use the new address and then read the
     // configuration descriptor header.
     case ENUM_E_ADDRESS_SET:
-        printf("Address set\r\n");
+        wtr_debug_printf("Address set\r\n");
         ENUM_CHECKED(
             usb_h_pipe_set_control_param(_pipe_0, _enum_data.address, 0, _pipe_0->max_pkt_size, _pipe_0->speed));
         // Wait a little bit before asking for the config descriptor, since some
@@ -221,13 +222,13 @@ static void _handle_enumeration_event(enum enumeration_event event) {
     // little complex
     // so it is implemented in a separate helper function.
     case ENUM_E_CONF_DESC_READ:
-        printf("Got config descriptor reply\r\n");
+        wtr_debug_printf("Got config descriptor reply\r\n");
         ENUM_CHECKED(_handle_config_descriptor());
         _enum_data.state = ENUM_S_CONFIGURED;
         break;
 
     case ENUM_E_CONFIG_SET:
-        printf("Enumeration successful.\r\n");
+        wtr_debug_printf("Enumeration successful.\r\n");
         _enum_data.state = ENUM_S_READY;
 
         // Remove the callback for pipe 0. If the driver uses it,
@@ -268,7 +269,7 @@ static void _handle_enumeration_event(enum enumeration_event event) {
     // Device disconnected. Teardown any enumeration resources and notify the
     // device driver.
     case ENUM_E_DISCONNECTED:
-        printf("Port %u disconnection.\r\n", _enum_data.port);
+        wtr_debug_printf("Port %u disconnection.\r\n", _enum_data.port);
         _enum_data.state = ENUM_S_UNATTACHED;
         for (size_t i = 0; i < WTR_USB_MAX_HOST_DRIVERS; i++) {
             struct wtr_usb_host_driver *driver = &_host_drivers[i];
@@ -284,7 +285,7 @@ static void _handle_enumeration_event(enum enumeration_event event) {
         break;
 
     case ENUM_E_FAILED:
-        printf("Enumeration failed in state %i, reason: %li.\r\n", _enum_data.state, _enum_data.failure_reason);
+        wtr_debug_printf("Enumeration failed in state %i, reason: %li.\r\n", _enum_data.state, _enum_data.failure_reason);
         _enum_data.state = ENUM_S_FAILED;
         // TODO: Notify user code.
         _cleanup_enumeration();
@@ -332,29 +333,29 @@ static int32_t _handle_device_descriptor() {
             usb_h_pipe_set_control_param(_pipe_0, _pipe_0->dev, _pipe_0->ep, bMaxPackSize0, _pipe_0->speed);
 
         if (request_status != ERR_NONE) {
-            printf("Failed to adjust endpoint packet size, status: %lu\r\n", request_status);
+            wtr_debug_printf("Failed to adjust endpoint packet size, status: %lu\r\n", request_status);
             return request_status;
         }
 
-        printf("Requesting full device descriptor.\r\n");
+        wtr_debug_printf("Requesting full device descriptor.\r\n");
 
         return wtr_usb_send_get_dev_desc_request(_pipe_0, req_buf, rep_buf, sizeof(usb_dev_desc_t));
     }
 
     struct usb_dev_desc *dev_desc = USB_STRUCT_PTR(usb_dev_desc, rep_buf);
 
-    printf("USB Descriptor:\r\n");
-    printf("\tLength: %u\r\n", dev_desc->bLength);
-    printf("\tType: %u\r\n", dev_desc->bDescriptorType);
-    printf("\tClass: %u\r\n", dev_desc->bDeviceClass);
-    printf("\tSublass: %u\r\n", dev_desc->bDeviceSubClass);
-    printf("\tProtocol: %u\r\n", dev_desc->bDeviceProtocol);
-    printf("\tEP0 max packet size: %u\r\n", dev_desc->bMaxPacketSize0);
-    printf("\tVendor: %x\r\n", dev_desc->idVendor);
-    printf("\tProduct: %x\r\n", dev_desc->idProduct);
-    printf("\tNum configurations: %u\r\n", dev_desc->bNumConfigurations);
+    wtr_debug_printf("USB Descriptor:\r\n");
+    wtr_debug_printf("\tLength: %u\r\n", dev_desc->bLength);
+    wtr_debug_printf("\tType: %u\r\n", dev_desc->bDescriptorType);
+    wtr_debug_printf("\tClass: %u\r\n", dev_desc->bDeviceClass);
+    wtr_debug_printf("\tSublass: %u\r\n", dev_desc->bDeviceSubClass);
+    wtr_debug_printf("\tProtocol: %u\r\n", dev_desc->bDeviceProtocol);
+    wtr_debug_printf("\tEP0 max packet size: %u\r\n", dev_desc->bMaxPacketSize0);
+    wtr_debug_printf("\tVendor: %x\r\n", dev_desc->idVendor);
+    wtr_debug_printf("\tProduct: %x\r\n", dev_desc->idProduct);
+    wtr_debug_printf("\tNum configurations: %u\r\n", dev_desc->bNumConfigurations);
 
-    printf("Assigning address 1\r\n");
+    wtr_debug_printf("Assigning address 1\r\n");
 
     // TODO: Address assignment
     _enum_data.address = 1;
@@ -367,7 +368,7 @@ static int32_t _handle_config_descriptor() {
 
     // We didn't get the whole descriptor header, fail.
     if (_pipe_0->x.ctrl.count < sizeof(struct usb_config_desc)) {
-        printf("Enumeration failed, config descriptor is not the right size.\r\n");
+        wtr_debug_printf("Enumeration failed, config descriptor is not the right size.\r\n");
         return ERR_WRONG_LENGTH;
     }
 
@@ -379,16 +380,16 @@ static int32_t _handle_config_descriptor() {
             return ERR_OVERFLOW;
         }
 
-        printf("Requesting full config descriptor.\r\n");
+        wtr_debug_printf("Requesting full config descriptor.\r\n");
 
         return wtr_usb_send_get_conf_desc_request(_pipe_0, 0, req_buf, rep_buf, descriptor_length);
     }
 
-    printf("Got full descriptor. Length: %u\r\n", conf_desc->wTotalLength);
+    wtr_debug_printf("Got full descriptor. Length: %u\r\n", conf_desc->wTotalLength);
 
     memcpy(_enum_data.conf_desc, (uint8_t *)conf_desc, conf_desc->wTotalLength);
 
-    printf("Setting configuration\r\n");
+    wtr_debug_printf("Setting configuration\r\n");
     return wtr_usb_send_set_config_request(_pipe_0, 1, req_buf);
 }
 
@@ -457,10 +458,10 @@ static void _handle_root_hub_change_event(struct usb_h_desc *drv, uint8_t port, 
     // Not implemented by the root hub, instead, the vbus handler deals with this.
     // However, this event but may be implemented in downstream hubs.
     case PORT_OVER_CURRENT:
-        printf("Port overcurrent. Port: %u\r\n", port);
+        wtr_debug_printf("Port overcurrent. Port: %u\r\n", port);
         return;
     default:
-        printf("Unknown port change event: %u\r\n", ftr);
+        wtr_debug_printf("Unknown port change event: %u\r\n", ftr);
         return;
     }
 }
@@ -474,7 +475,7 @@ static void _handle_pipe_0_xfer_done(struct usb_h_pipe *pipe) {
     struct usb_req *req = USB_STRUCT_PTR(usb_req, req_buf);
     uint16_t req_type = req->wValue >> 8;
 
-    printf("Pipe 0 transfer done. Request: %u, Status: %i\r\n", req->bRequest, pipe->x.general.status);
+    wtr_debug_printf("Pipe 0 transfer done. Request: %u, Status: %i\r\n", req->bRequest, pipe->x.general.status);
 
     if (pipe->x.general.status < 0) {
         // TODO: Idk, do something about this error?
@@ -499,7 +500,7 @@ static void _handle_pipe_0_xfer_done(struct usb_h_pipe *pipe) {
         break;
 
     default:
-        printf("Unknown request: %u\r\n", req->bRequest);
+        wtr_debug_printf("Unknown request: %u\r\n", req->bRequest);
         return;
         break;
     }

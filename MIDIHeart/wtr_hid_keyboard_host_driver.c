@@ -4,6 +4,7 @@
 #include "usb_protocol_hid.h"
 #include "wtr_queue.h"
 #include "wtr_usb_host.h"
+#include "wtr_debug.h"
 #include <stdio.h>
 
 /* Constants */
@@ -92,7 +93,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
         pd = usb_desc_next(pd);
 
         if (pd == eod) {
-            printf("End of descriptors.\r\n");
+            wtr_debug_printf("End of descriptors.\r\n");
             break;
         }
 
@@ -108,14 +109,14 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
 
         if (found_iface && usb_desc_type(pd) == USB_DT_ENDPOINT) {
             in_ep = USB_STRUCT_PTR(usb_ep_desc, pd);
-            printf("Found endpoint descriptor. Address: %x, Attributes %x, packet "
+            wtr_debug_printf("Found endpoint descriptor. Address: %x, Attributes %x, packet "
                    "size: %u, interval: %u\r\n",
                    in_ep->bEndpointAddress, in_ep->bmAttributes, in_ep->wMaxPacketSize, in_ep->bInterval);
         }
     }
 
     if (in_ep == NULL) {
-        printf("Could not find the IN endpoint.\r\n");
+        wtr_debug_printf("Could not find the IN endpoint.\r\n");
         return WTR_USB_HD_STATUS_UNSUPPORTED;
     }
 
@@ -123,7 +124,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
                                    in_ep->bmAttributes, in_ep->bInterval, pipe_0->speed, true);
 
     if (_in_pipe == NULL) {
-        printf("Failed to allocate IN pipe!\r\n");
+        wtr_debug_printf("Failed to allocate IN pipe!\r\n");
         goto failed;
     }
 
@@ -132,7 +133,7 @@ static int32_t _handle_enumeration(struct usb_h_pipe *pipe_0, struct usb_config_
     // We need pipe0 to send SetReport requests to set the LED status.
     _ctrl_pipe = pipe_0;
 
-    printf("Pipes allocated!\r\n");
+    wtr_debug_printf("Pipes allocated!\r\n");
 
     // Send the first read request to the IN endpoint. The callback will handle
     // scheduling polling.
@@ -398,7 +399,7 @@ static void _poll() {
     int32_t result = usb_h_bulk_int_iso_xfer(_in_pipe, _in_pipe_buf, _in_pipe->max_pkt_size, false);
 
     if (result != ERR_NONE) {
-        printf("Failed to start bulk transfer!");
+        wtr_debug_printf("Failed to start bulk transfer!");
     }
 }
 
@@ -411,7 +412,7 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
         return;
 
     if (bii->status != USB_H_OK) {
-        printf("Error in HID Keyboard IN. State: %u, Status: %i, Count: %lu, Size: "
+        wtr_debug_printf("Error in HID Keyboard IN. State: %u, Status: %i, Count: %lu, Size: "
                "%lu\r\n",
                bii->state, bii->status, bii->count, bii->size);
         return;
@@ -426,7 +427,7 @@ static void _handle_pipe_in(struct usb_h_pipe *pipe) {
             _handle_report();
         }
     } else if (bii->count > 0) {
-        printf("Unexpected HID report, size is %lu\r\n", bii->count);
+        wtr_debug_printf("Unexpected HID report, size is %lu\r\n", bii->count);
     }
 
     // Make another request to the endpoint to continue polling.
