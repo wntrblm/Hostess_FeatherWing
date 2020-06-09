@@ -15,7 +15,7 @@
 // <i> Indicates whether Priority Level 0 is enabled or not
 // <id> dmac_lvlen0
 #ifndef CONF_DMAC_LVLEN0
-#define CONF_DMAC_LVLEN0 0
+#define CONF_DMAC_LVLEN0 1
 #endif
 
 // <o> Level 0 Round-Robin Arbitration
@@ -37,7 +37,7 @@
 // <i> Indicates whether Priority Level 1 is enabled or not
 // <id> dmac_lvlen1
 #ifndef CONF_DMAC_LVLEN1
-#define CONF_DMAC_LVLEN1 0
+#define CONF_DMAC_LVLEN1 1
 #endif
 
 // <o> Level 1 Round-Robin Arbitration
@@ -59,7 +59,7 @@
 // <i> Indicates whether Priority Level 2 is enabled or not
 // <id> dmac_lvlen2
 #ifndef CONF_DMAC_LVLEN2
-#define CONF_DMAC_LVLEN2 0
+#define CONF_DMAC_LVLEN2 1
 #endif
 
 // <o> Level 2 Round-Robin Arbitration
@@ -81,7 +81,7 @@
 // <i> Indicates whether Priority Level 3 is enabled or not
 // <id> dmac_lvlen3
 #ifndef CONF_DMAC_LVLEN3
-#define CONF_DMAC_LVLEN3 0
+#define CONF_DMAC_LVLEN3 1
 #endif
 
 // <o> Level 3 Round-Robin Arbitration
@@ -311,7 +311,7 @@
 // <i> Defines the trigger action used for a transfer
 // <id> dmac_trigact_1
 #ifndef CONF_DMAC_TRIGACT_1
-#define CONF_DMAC_TRIGACT_1 0
+#define CONF_DMAC_TRIGACT_1 2
 #endif
 
 // <o> Trigger source
@@ -427,7 +427,7 @@
 // <i> Defines whether source or destination addresses are using the step size settings
 // <id> dmac_stepsel_1
 #ifndef CONF_DMAC_STEPSEL_1
-#define CONF_DMAC_STEPSEL_1 0
+#define CONF_DMAC_STEPSEL_1 1
 #endif
 
 // <q> Source Address Increment

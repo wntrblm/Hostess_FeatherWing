@@ -2702,7 +2702,7 @@ static inline void _spi_tx_check_and_send(void *const hw, const uint32_t iflag, 
 	}
 
 	ctrl->txcnt++;
-	hri_sercomspi_write_DATA_reg(hw, data);
+	//hri_sercomspi_write_DATA_reg(hw, data);
 }
 
 /** Check interrupt flag of ERROR and update transaction runtime information. */
@@ -2770,7 +2770,7 @@ int32_t _spi_m_async_enable_tx(struct _spi_async_dev *dev, bool state)
 	ASSERT(dev && hw);
 
 	if (state) {
-		hri_sercomspi_set_INTEN_DRE_bit(hw);
+		//hri_sercomspi_set_INTEN_DRE_bit(hw);
 	} else {
 		hri_sercomspi_clear_INTEN_DRE_bit(hw);
 	}
