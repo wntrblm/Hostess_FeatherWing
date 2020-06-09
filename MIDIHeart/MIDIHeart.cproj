@@ -194,12 +194,12 @@
           <AcmeProjectActionInfo Action="File" Source="stdio_start.h" IsConfig="false" Hash="5j2k69zdoQpbzluEyr/rHQ" />
           <AcmeProjectActionInfo Action="File" Source="atmel_start.h" IsConfig="false" Hash="SMAmPkJoghsCDgpKCmCl/Q" />
           <AcmeProjectActionInfo Action="File" Source="atmel_start.c" IsConfig="false" Hash="yy7cZ44eCOz+i825Rr7jgw" />
-          <AcmeProjectActionInfo Action="File" Source="config/hpl_dmac_config.h" IsConfig="true" Hash="epQJaS6fYVwOO2L9+1CkQg" />
+          <AcmeProjectActionInfo Action="File" Source="config/hpl_dmac_config.h" IsConfig="true" Hash="zVMzENe1/UDIrabcbw1fAQ" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_eic_config.h" IsConfig="true" Hash="ys2u/HA52ZJA28cgFjLmnA" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_gclk_config.h" IsConfig="true" Hash="OqlBounJ+qVNIgQnZLsXhQ" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_pm_config.h" IsConfig="true" Hash="x4vaJkd/zdQh7JrOUaIkRw" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_rtc_config.h" IsConfig="true" Hash="cj99f88YMO2RoIxwdfMf9g" />
-          <AcmeProjectActionInfo Action="File" Source="config/hpl_sercom_config.h" IsConfig="true" Hash="mbMr/ihQC1VjiTwCseRnfA" />
+          <AcmeProjectActionInfo Action="File" Source="config/hpl_sercom_config.h" IsConfig="true" Hash="ZjInlXxwfiL1QUJA46tR0g" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_sysctrl_config.h" IsConfig="true" Hash="6aLz+FYnKbquymdj/jVJ2g" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_systick_config.h" IsConfig="true" Hash="tlT3lNDKWFe82MiGWfQzcA" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_usb_config.h" IsConfig="true" Hash="CKkhnYXmYrrGb2u9dKLggw" />
@@ -941,6 +941,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="usb\usb_protocol.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="wtr_debug.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="wtr_hid_keyboard_host_driver.c">

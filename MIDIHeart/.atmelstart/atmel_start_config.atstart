@@ -345,7 +345,7 @@ drivers:
     functionality: SPI
     api: HAL:Driver:SPI_Slave_Async
     configuration:
-      spi_slave_advanced: false
+      spi_slave_advanced: true
       spi_slave_arch_addr: 0
       spi_slave_arch_addrmask: 0
       spi_slave_arch_amode: Address mask
@@ -486,14 +486,14 @@ drivers:
         the transaction
       dmac_blockact_9: Channel will be disabled if it is the last block transfer in
         the transaction
-      dmac_channel_0_settings: false
+      dmac_channel_0_settings: true
       dmac_channel_10_settings: false
       dmac_channel_11_settings: false
       dmac_channel_12_settings: false
       dmac_channel_13_settings: false
       dmac_channel_14_settings: false
       dmac_channel_15_settings: false
-      dmac_channel_1_settings: false
+      dmac_channel_1_settings: true
       dmac_channel_2_settings: false
       dmac_channel_3_settings: false
       dmac_channel_4_settings: false
@@ -503,7 +503,7 @@ drivers:
       dmac_channel_8_settings: false
       dmac_channel_9_settings: false
       dmac_dbgrun: false
-      dmac_dstinc_0: false
+      dmac_dstinc_0: true
       dmac_dstinc_1: false
       dmac_dstinc_10: false
       dmac_dstinc_11: false
@@ -519,9 +519,9 @@ drivers:
       dmac_dstinc_7: false
       dmac_dstinc_8: false
       dmac_dstinc_9: false
-      dmac_enable: false
-      dmac_enable_0: false
-      dmac_enable_1: false
+      dmac_enable: true
+      dmac_enable_0: true
+      dmac_enable_1: true
       dmac_enable_10: false
       dmac_enable_11: false
       dmac_enable_12: false
@@ -629,7 +629,7 @@ drivers:
       dmac_rrlvlen2: Static arbitration scheme for channel with priority 2
       dmac_rrlvlen3: Static arbitration scheme for channel with priority 3
       dmac_srcinc_0: false
-      dmac_srcinc_1: false
+      dmac_srcinc_1: true
       dmac_srcinc_10: false
       dmac_srcinc_11: false
       dmac_srcinc_12: false
@@ -644,7 +644,7 @@ drivers:
       dmac_srcinc_7: false
       dmac_srcinc_8: false
       dmac_srcinc_9: false
-      dmac_stepsel_0: Step size settings apply to the destination address
+      dmac_stepsel_0: Step size settings apply to the source address
       dmac_stepsel_1: Step size settings apply to the destination address
       dmac_stepsel_10: Step size settings apply to the destination address
       dmac_stepsel_11: Step size settings apply to the destination address
@@ -676,8 +676,8 @@ drivers:
       dmac_stepsize_7: Next ADDR = ADDR + (BEATSIZE + 1) * 1
       dmac_stepsize_8: Next ADDR = ADDR + (BEATSIZE + 1) * 1
       dmac_stepsize_9: Next ADDR = ADDR + (BEATSIZE + 1) * 1
-      dmac_trifsrc_0: Only software/event triggers
-      dmac_trifsrc_1: Only software/event triggers
+      dmac_trifsrc_0: SERCOM4 RX Trigger
+      dmac_trifsrc_1: SERCOM4 TX Trigger
       dmac_trifsrc_10: Only software/event triggers
       dmac_trifsrc_11: Only software/event triggers
       dmac_trifsrc_12: Only software/event triggers
@@ -692,7 +692,7 @@ drivers:
       dmac_trifsrc_7: Only software/event triggers
       dmac_trifsrc_8: Only software/event triggers
       dmac_trifsrc_9: Only software/event triggers
-      dmac_trigact_0: One trigger required for each block transfer
+      dmac_trigact_0: One trigger required for each beat transfer
       dmac_trigact_1: One trigger required for each block transfer
       dmac_trigact_10: One trigger required for each block transfer
       dmac_trigact_11: One trigger required for each block transfer

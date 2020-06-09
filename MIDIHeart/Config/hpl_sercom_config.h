@@ -287,7 +287,7 @@
 // <e> Advanced Configuration
 // <id> spi_slave_advanced
 #ifndef CONF_SERCOM_4_SPI_ADVANCED
-#define CONF_SERCOM_4_SPI_ADVANCED 0
+#define CONF_SERCOM_4_SPI_ADVANCED 1
 #endif
 
 // <o> Data Order
