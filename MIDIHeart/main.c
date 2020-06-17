@@ -1,7 +1,7 @@
 #include <atmel_start.h>
 #include <hpl_delay.h>
-#include <hpl_dma.h>
 
+#include "wtr_spi_dma.h"
 #include "wtr_hid_keyboard_host_driver.h"
 #include "wtr_midi_host_driver.h"
 #include "wtr_ps4_host_driver.h"
@@ -37,55 +37,23 @@ void usb_connection_callback(uint8_t port, bool state) {
 
 volatile hal_atomic_t spi_rx_atomic;
 
-// void spi_rx_callback(const struct spi_s_async_descriptor *const spi_desc) {
-//     struct io_descriptor *io;
+struct wtr_spi_dma_inst dma_spi;
 
-//     // Disable interrupts while responding to SPI requests. An
-//     // interrupt during this could cause SPI data to drop,
-//     // it also prevents contention on the event queues.
-//     //atomic_enter_critical(&spi_rx_atomic);
-//     spi_s_async_get_io_descriptor(&SPI_0, &io);
-
-//     hostess_parse_byte_stream(io);
-
-//     //atomic_leave_critical(&spi_rx_atomic);
-// }
-
-
-void dma_callback(struct _dma_resource *dma) {
-    //printf("Done.");
-    // Listen to RX interrupts again.
-    SERCOM4->SPI.INTENSET.reg = SERCOM_SPI_INTENSET_RXC;
-}
-
-int32_t spi_dma_write(struct io_descriptor *io, uint8_t *data, uint16_t length) {
-
-    struct _dma_resource *dma;
-    _dma_get_channel_resource(&dma, 1);
-    dma->dma_cb.transfer_done = &dma_callback;
-    dma->dma_cb.error = &dma_callback;
-    _dma_set_irq_state(1, DMA_TRANSFER_COMPLETE_CB, true);
-    _dma_set_irq_state(1, DMA_TRANSFER_ERROR_CB, true);
-    _dma_set_source_address(1, data);
-    _dma_set_destination_address(1, (void *)&REG_SERCOM4_SPI_DATA);
-    _dma_set_data_amount(1, length);
-
-    _dma_enable_transaction(1, false);
-    
-    // Don't respond to RX interrupts until the DMA transfer is complete.
-    SERCOM4->SPI.INTENCLR.reg = SERCOM_SPI_INTENSET_RXC;
-
-    return ERR_NONE;
+static int32_t tmp_spi_adapter_io_write(struct io_descriptor *const io, const uint8_t *const buf, const uint16_t size) {
+    return wtr_spi_dma_write(&dma_spi, buf, size);
 }
 
 void spi_rx_callback(const struct spi_s_async_descriptor *const spi_desc) {
+    //atomic_enter_critical(&spi_rx_atomic);
     struct io_descriptor *io;
     spi_s_async_get_io_descriptor(&SPI_0, &io);
 
     // Replace the write function with the DMA-enabled write function.
-    io->write = &spi_dma_write;
+    io->write = &tmp_spi_adapter_io_write;
 
     hostess_parse_byte_stream(io);
+
+    //atomic_leave_critical(&spi_rx_atomic);
 }
 
 
@@ -129,6 +97,10 @@ int main(void) {
 
     // Enable DMA for the SPI buffers.
     _dma_init();
+
+    // Configure SPI DMA
+    dma_spi.dma_channel = 1;
+    dma_spi.sercom = SERCOM4;
 
     // Start listening for SPI.
     spi_s_async_register_callback(&SPI_0, SPI_S_CB_RX, (FUNC_PTR)spi_rx_callback);
