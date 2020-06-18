@@ -1,5 +1,5 @@
 format_version: '2'
-name: MIDIHeart
+name: Hostess
 versions:
   api: '1.0'
   backend: 1.7.360

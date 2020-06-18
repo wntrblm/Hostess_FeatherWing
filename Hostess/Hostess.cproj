@@ -12,9 +12,9 @@
     <OutputFileName>$(MSBuildProjectName)</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
-    <AssemblyName>MIDIHeart</AssemblyName>
+    <AssemblyName>Hostess</AssemblyName>
     <Name>Hostess</Name>
-    <RootNamespace>MIDIHeart</RootNamespace>
+    <RootNamespace>Hostess</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
