@@ -34,6 +34,9 @@ void usb_connection_callback(uint8_t port, bool state) {
 
 
 /* SPI wiring to connect SPI to the Hostess command parser. */
+// TODO: This code is work in progress, I am moving away from
+// ASF's spi_s_async to a DMA-based SPI driver, so there's
+// some wonky code here.
 
 volatile hal_atomic_t spi_rx_atomic;
 
@@ -79,7 +82,7 @@ int main(void) {
 
     // Enable USB Host Drivers.
     wtr_usb_midi_host_init();
-    //wtr_usb_hid_keyboard_init();
+    wtr_usb_hid_keyboard_init();
     //wtr_ps4_driver_init();
     
     // Setup the vbus fault interrupt.
@@ -95,10 +98,8 @@ int main(void) {
     hostess_set_queue(HOSTESS_QUEUE_KB_EVENT, wtr_usb_hid_keyboard_get_event_queue());
     hostess_set_queue(HOSTESS_QUEUE_KB_STRING, wtr_usb_hid_keyboard_get_keystring_queue());
 
-    // Enable DMA for the SPI buffers.
-    _dma_init();
-
     // Configure SPI DMA
+    _dma_init();
     dma_spi.dma_channel = 1;
     dma_spi.sercom = SERCOM4;
 
