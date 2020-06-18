@@ -616,10 +616,10 @@ drivers:
       dmac_lvl_7: Channel priority 0
       dmac_lvl_8: Channel priority 0
       dmac_lvl_9: Channel priority 0
-      dmac_lvlen0: false
-      dmac_lvlen1: false
-      dmac_lvlen2: false
-      dmac_lvlen3: false
+      dmac_lvlen0: true
+      dmac_lvlen1: true
+      dmac_lvlen2: true
+      dmac_lvlen3: true
       dmac_lvlpri0: 0
       dmac_lvlpri1: 0
       dmac_lvlpri2: 0
@@ -645,7 +645,7 @@ drivers:
       dmac_srcinc_8: false
       dmac_srcinc_9: false
       dmac_stepsel_0: Step size settings apply to the source address
-      dmac_stepsel_1: Step size settings apply to the destination address
+      dmac_stepsel_1: Step size settings apply to the source address
       dmac_stepsel_10: Step size settings apply to the destination address
       dmac_stepsel_11: Step size settings apply to the destination address
       dmac_stepsel_12: Step size settings apply to the destination address
@@ -693,7 +693,7 @@ drivers:
       dmac_trifsrc_8: Only software/event triggers
       dmac_trifsrc_9: Only software/event triggers
       dmac_trigact_0: One trigger required for each beat transfer
-      dmac_trigact_1: One trigger required for each block transfer
+      dmac_trigact_1: One trigger required for each beat transfer
       dmac_trigact_10: One trigger required for each block transfer
       dmac_trigact_11: One trigger required for each block transfer
       dmac_trigact_12: One trigger required for each block transfer
