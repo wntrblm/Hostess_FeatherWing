@@ -34,29 +34,31 @@ void usb_connection_callback(uint8_t port, bool state) {
 
 
 /* SPI wiring to connect SPI to the Hostess command parser. */
-// TODO: This code is work in progress, I am moving away from
-// ASF's spi_s_async to a DMA-based SPI driver, so there's
-// some wonky code here.
+/*
+Some notes about this code: instead of using the standard Atmel
+SPI write logic, this uses wtr_spi_dma_write to configure a
+DMA transaction. All bytes received from the host are ignored
+until the DMA is complete.
 
-volatile hal_atomic_t spi_rx_atomic;
+I considered using DMA for the read side, too, but it's a lot
+of work for little gain, considering most requests take 2 bytes
+and they need to be parsed by this code anyway.
+*/
 
 struct wtr_spi_dma_inst dma_spi;
 
-static int32_t tmp_spi_adapter_io_write(struct io_descriptor *const io, const uint8_t *const buf, const uint16_t size) {
-    return wtr_spi_dma_write(&dma_spi, buf, size);
+static int32_t spi_dma_io_write_adapter(struct io_descriptor *const io, const uint8_t *const buf, const uint16_t size) {
+    return wtr_spi_dma_write(&dma_spi, (uint8_t *)buf, size);
 }
 
 void spi_rx_callback(const struct spi_s_async_descriptor *const spi_desc) {
-    //atomic_enter_critical(&spi_rx_atomic);
     struct io_descriptor *io;
     spi_s_async_get_io_descriptor(&SPI_0, &io);
 
     // Replace the write function with the DMA-enabled write function.
-    io->write = &tmp_spi_adapter_io_write;
+    io->write = &spi_dma_io_write_adapter;
 
     hostess_parse_byte_stream(io);
-
-    //atomic_leave_critical(&spi_rx_atomic);
 }
 
 
