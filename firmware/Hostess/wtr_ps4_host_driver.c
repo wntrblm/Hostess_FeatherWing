@@ -32,7 +32,7 @@ static void _handle_report();
 
 /* Public functions */
 
-void wtr_ps4_driver_init() {
+void wtr_ps4_controller_init() {
     // event_queue.data = (uint8_t *)event_queue_buf;
     // event_queue.item_size = sizeof(struct hid_keyboard_event);
     // event_queue.capacity = EVENT_QUEUE_SIZE;

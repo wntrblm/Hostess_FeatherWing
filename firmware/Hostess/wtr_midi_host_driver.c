@@ -31,7 +31,7 @@ static void _handle_pipe_out(struct usb_h_pipe *);
 
 /* Public functions */
 
-void wtr_usb_midi_host_init() {
+void wtr_usb_midi_init() {
     _in_queue.data = _in_queue_data;
     _in_queue.item_size = USB_MIDI_EVENT_PACKET_SIZE;
     _in_queue.capacity = WTR_USB_MIDI_HOST_BUF_SIZE / USB_MIDI_EVENT_PACKET_SIZE;

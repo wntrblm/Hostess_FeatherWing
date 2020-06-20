@@ -8,7 +8,7 @@
 #endif
 #define USB_MIDI_EVENT_PACKET_SIZE 4
 
-void wtr_usb_midi_host_init();
+void wtr_usb_midi_init();
 
 bool wtr_usb_midi_is_device_attached();
 

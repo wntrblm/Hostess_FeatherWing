@@ -70,8 +70,8 @@ int main(void) {
     // Set interrupt priorities. Setting the SPI interrupt
     // a lower priority prevents it from starving the USB
     // task.
-    NVIC_SetPriority(SERCOM4_IRQn, 0);
-    NVIC_SetPriority(USB_IRQn, 1);
+    NVIC_SetPriority(USB_IRQn, 0);
+    NVIC_SetPriority(SERCOM4_IRQn, 1);
     NVIC_SetPriority(RTC_IRQn, 3);
 
     // Start the LED driver.
@@ -83,9 +83,9 @@ int main(void) {
     wtr_usb_host_init(&USB_0_inst);
 
     // Enable USB Host Drivers.
-    wtr_usb_midi_host_init();
+    wtr_usb_midi_init();
     wtr_usb_hid_keyboard_init();
-    //wtr_ps4_driver_init();
+    //wtr_ps4_controller_init();
     
     // Setup the vbus fault interrupt.
     ext_irq_register(VBUS_FAULT_PIN, &vbus_fault_interrupt);
