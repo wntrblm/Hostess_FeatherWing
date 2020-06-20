@@ -67,11 +67,11 @@ int main(void) {
     // Initializes MCU, drivers and middleware
     atmel_start_init();
 
-    // Set interrupt priorities. Setting the SPI interrupt
-    // a lower priority prevents it from starving the USB
-    // task.
-    NVIC_SetPriority(USB_IRQn, 0);
-    NVIC_SetPriority(SERCOM4_IRQn, 1);
+    // Set interrupt priorities. The SPI interrupt should
+    // be serviced as quickly as possible to prevent
+    // the host from timing out.
+    NVIC_SetPriority(SERCOM4_IRQn,0);
+    NVIC_SetPriority(USB_IRQn, 1);
     NVIC_SetPriority(RTC_IRQn, 3);
 
     // Start the LED driver.
